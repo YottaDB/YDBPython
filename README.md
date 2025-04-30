@@ -40,7 +40,7 @@ YDBPython provides a Pythonic API for accessing YottaDB databases.
 	* *Option 2*: From source:
 		1. Get the code: `git clone https://gitlab.com/YottaDB/Lang/YDBPython.git`
 		2. Enter code directory `cd YDBPython/`
-		3. Run `setup.py` to install:
+		3. Run `python -m pip install .` to install:
 			* *Option 1*: Install in `venv`:
 				1. Install the python3-venv package:
 					* Ubuntu/Debian: `sudo apt install python3-venv`
@@ -49,11 +49,11 @@ YDBPython provides a Pythonic API for accessing YottaDB databases.
 				2. Create `venv`: `python3 -m venv .venv`
 				3. Activate `venv`: `source .venv/bin/activate`
 				4. Install pre-requisites in `venv`: `pip install setuptools`
-				5. Install into `venv`: `python setup.py install`
+				5. Install into `venv`: `python -m pip install .`
 			* *Option 2*: Install to user:
-				* `python3 setup.py install --user`
+				* `python3 -m pip install --user .`
 			* *Option 3*: Install globally (not suggested):
-				* `sudo -E python3 setup.py install`
+				* `sudo -E python3 -m pip install .`
 
 ## Testing
 

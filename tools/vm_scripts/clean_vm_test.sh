@@ -3,7 +3,7 @@
 #                                                               #
 # Copyright (c) 2020-2021 Peter Goss All rights reserved.       #
 #                                                               #
-# Copyright (c) 2020-2023 YottaDB LLC and/or its subsidiaries.  #
+# Copyright (c) 2020-2025 YottaDB LLC and/or its subsidiaries.  #
 # All rights reserved.                                          #
 #                                                               #
 #   This source code contains the intellectual property         #
@@ -93,6 +93,6 @@ git clone $repository
 
 # install YDBPython
 cd YDBPython
-python3 setup.py install --user
+python3 -m pip install --user .
 python3 -m pip install --user pytest psutil
 python3 -m pytest tests/

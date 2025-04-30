@@ -2,7 +2,7 @@
 #                                                               #
 # Copyright (c) 2020-2021 Peter Goss All rights reserved.       #
 #                                                               #
-# Copyright (c) 2020-2023 YottaDB LLC and/or its subsidiaries.  #
+# Copyright (c) 2020-2025 YottaDB LLC and/or its subsidiaries.  #
 # All rights reserved.                                          #
 #                                                               #
 #   This source code contains the intellectual property         #
@@ -25,14 +25,14 @@ stages:
     - apt install -y python3-setuptools python3-dev libffi-dev python3-pip pkg-config
     - source $(pkg-config --variable=prefix yottadb)/ydb_env_set
     - python3 -m pip install pytest-runner
-    - python3 setup.py install --user
+    - python3 -m pip install --user .
 
 .rocky:
   image: yottadb/yottadb-rocky-base:latest-master
   before_script:
     - yum install -y python3 gcc python3-devel libffi-devel pkg-config
     - source $(pkg-config --variable=prefix yottadb)/ydb_env_set
-    - python3 setup.py install --user
+    - python3 -m pip install --user .
 
 # https://stackoverflow.com/questions/692000/how-do-i-write-standard-error-to-a-file-while-using-tee-with-a-pipe
 .test_ubuntu:
