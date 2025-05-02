@@ -38,22 +38,12 @@ stages:
 .test_ubuntu:
   script:
     - python3 -m pip install --user pytest pytest-order psutil requests
-    - mkdir artifacts
-    - python3 -m pytest tests/ -vs 1> artifacts/pytest.out 2> artifacts/pytest.err
-  artifacts:
-    paths:
-      - ./artifacts
-    when: always
+    - python3 -m pytest tests/ -vs
 
 .test_rocky:
   script:
     - python3 -m pip install --user pytest pytest-order psutil requests
-    - mkdir artifacts
-    - python3 -m pytest tests/ -vs 1> artifacts/pytest.out 2> artifacts/pytest.err
-  artifacts:
-    paths:
-      - ./artifacts
-    when: always
+    - python3 -m pytest tests/ -vs
 
 .debug:
   script:
