@@ -55,7 +55,13 @@ YDBPython provides a Pythonic API for accessing YottaDB databases.
 			* *Option 3*: Install globally (not suggested):
 				* `sudo -E python3 -m pip install .`
 
-## Testing
+## Contributing and Testing
+
+Please install the pre-commit hook before committing changes:
+```
+ln -s ../../tools/git_hooks/pre-commit.sh .git/hooks/pre-commit
+```
+The pre-commit hook requires [`black`](https://github.com/psf/black) installed; you can install it with `pip install black`.
 
 To run YDBPython's test suite with a YDBPython source installation:
 
