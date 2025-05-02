@@ -2,7 +2,7 @@
 #                                                               #
 # Copyright (c) 2019-2021 Peter Goss All rights reserved.       #
 #                                                               #
-# Copyright (c) 2019-2024 YottaDB LLC and/or its subsidiaries.  #
+# Copyright (c) 2019-2025 YottaDB LLC and/or its subsidiaries.  #
 # All rights reserved.                                          #
 #                                                               #
 #   This source code contains the intellectual property         #
@@ -1562,6 +1562,12 @@ def test_Key_save_tree(simple_data):
     assert test4_sub1["subsub1"].value == b"test4sub1subsub1"
     assert test4_sub1["subsub2"].value == b"test4sub1subsub2"
     assert test4_sub1["subsub3"].value == b"test4sub1subsub3"
+
+
+def test_json_roundtrip_empty_object(new_db):
+    key = yottadb.Key("emptyjson")
+    key.save_json({})
+    assert {} == key.load_json()
 
 
 def test_deserialize_JSON(new_db):

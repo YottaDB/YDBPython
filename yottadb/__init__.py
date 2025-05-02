@@ -1139,6 +1139,9 @@ class Key:
         if key is None:
             key = self
         if isinstance(json, dict):
+            if not json:
+                # use the same format as lists and strings
+                key["\\d"].value = ""
             for sub, value in json.items():
                 # There is another level of nested data, continue recursing.
                 self.save_json(value, key[sub])
@@ -1146,6 +1149,7 @@ class Key:
             # The value is an array, store it in the database piecemeal by index,
             # starting from 1.
             if len(json) == 0:
+                # use the same format as dicts and strings
                 key["\\l"].value = ""
             else:
                 for index, item in enumerate(json, start=1):
@@ -1156,6 +1160,7 @@ class Key:
             if not isinstance(json, str):
                 json = str(json)
             else:
+                # derived from https://github.com/KRMAssociatesInc/JDS-GTM
                 key["\\s"].value = ""
             key.value = json
             # print(f"{key}={key.value}")
@@ -1177,6 +1182,8 @@ class Key:
         if key["\\l"].data == 1:
             # The value is an empty JSON array, so just return an empty list.
             return []
+        elif key["\\d"].data == 1:
+            return {}
         # print(f"{spaces}key_status: {key_status}\t\\s: {slash_s}")
         if key_status == 10:
             # The node has a subtree, which represents a JSON array or a JSON object.
