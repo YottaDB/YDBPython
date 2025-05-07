@@ -2,7 +2,7 @@
 #                                                               #
 # Copyright (c) 2019-2021 Peter Goss All rights reserved.       #
 #                                                               #
-# Copyright (c) 2019-2022 YottaDB LLC and/or its subsidiaries.  #
+# Copyright (c) 2019-2025 YottaDB LLC and/or its subsidiaries.  #
 # All rights reserved.                                          #
 #                                                               #
 #   This source code contains the intellectual property         #
@@ -14,9 +14,11 @@
 import os
 import shutil
 import subprocess
+import multiprocessing
 import shlex
 import time
 import sys
+import signal
 import random
 import pathlib
 import pytest  # type: ignore # ignore due to pytest not having type annotations
@@ -98,7 +100,18 @@ def reset_ci_environment(previous: dict):
 
 
 # Lock a value in the database
-def lock_value(key: Union[yottadb.Key, tuple], interval: float = 0.2, timeout: int = 1):
+def lock_value(key: Union[yottadb.Key, tuple], ppid: int, ready_event, timeout: int = 1):
+    interrupt_event = multiprocessing.Event()
+
+    # Create a handler to release the held lock and clean up the process
+    # upon the reception of a signal from the parent process
+    def handle_SIGINT(sig_num, stackframe):
+        print("# SIGINT received")
+        yottadb.lock_decr(varname, subsarray)
+        print("# Lock Released")
+        sys.exit(0)
+
+    # Extract the local or global variable name and subscripts from the given key object
     if isinstance(key, yottadb.Key):
         varname = key.varname
         subsarray = key.subsarray
@@ -108,25 +121,29 @@ def lock_value(key: Union[yottadb.Key, tuple], interval: float = 0.2, timeout: i
     if len(subsarray) == 0:
         subsarray = None
 
+    # Attempt to lock the LVN or GVN using the module-level lock_incr() function
     has_lock = False
     try:
         yottadb.lock_incr(varname, subsarray, timeout_nsec=(timeout * 1_000_000_000))
-        print("Lock Success")
+        print("\n# Lock Success")
         has_lock = True
     except yottadb.YDBLockTimeoutError:
-        print("Lock Failed")
+        print("# Lock Failed")
         sys.exit(1)
     except Exception as e:
-        print(f"Lock Error: {repr(e)}")
+        print(f"# Lock Error: {repr(e)}")
         sys.exit(2)
 
-    if has_lock:
-        time.sleep(interval)
-        yottadb.lock_decr(varname, subsarray)
-        if timeout != 0 or interval != 0:
-            print("Lock Released")
-
-    sys.exit(0)
+    assert has_lock
+    print("# Define SIGINT handler")
+    signal.signal(signal.SIGINT, handle_SIGINT)
+    print("# Set ready event")
+    ready_event.set()
+    # Wait until SIGINT is received from the parent process and, in that case,
+    # release the lock and exit with a success code.
+    interrupt_event.wait()
+    print("# Lock Not Released")
+    sys.exit(3)
 
 
 def execute(command: str, stdin: str = "") -> str:

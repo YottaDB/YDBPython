@@ -4,3 +4,4 @@ HelloWorld2 : ydb_string_t * entry^helloworld2(I:ydb_string_t *, IO:ydb_string_t
 Passthrough : ydb_string_t * entry^passthrough(I:ydb_string_t *)
 NoRet : void entry^noret(O:ydb_string_t *)
 StringExtend : ydb_string_t * entry^stringextend(O:ydb_string_t *)
+ShowLocks : ydb_string_t * entry^showlocks()

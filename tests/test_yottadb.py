@@ -13,6 +13,7 @@
 #################################################################
 import pytest  # type: ignore # ignore due to pytest not having type annotations
 import multiprocessing
+import subprocess
 import signal
 import psutil
 import random
@@ -762,101 +763,76 @@ def test_transaction_return_YDB_OK_to_depth(depth):
     teardown_db(db)
 
 
-# Confirm lock() works with Key objects without raising any errors.
-# Due to timing issues, it's not possible to reliably test the behavior
-# of lock() calls beyond simply failure detection. Accordingly,
-# this test will pass so long as there are no exceptions.
-def test_lock_Keys(simple_data):
-    t1 = yottadb.Key("^test1")
-    t2 = yottadb.Key("^test2")["sub1"]
-    t3 = yottadb.Key("^test3")["sub1"]["sub2"]
-    keys_to_lock = (t1, t2, t3)
-    # Attempt to get locks for keys t1,t2 and t3
-    yottadb.lock(keys=keys_to_lock, timeout_nsec=0)
-    # Attempt to increment/decrement locks
-    processes = []
-    for key in keys_to_lock:
-        process = multiprocessing.Process(target=lock_value, args=(key, 0.1))
-        process.start()
-        processes.append(process)
-    for process in processes:
-        process.join()
-        assert process.exitcode == 1
-    # Release all locks
+# Test various lock functions and lock methods on Key object
+def test_locks(new_db):
+    cur_dir = os.getcwd()
+    previous = set_ci_environment(cur_dir, cur_dir + "/tests/calltab.ci")
+
+    ppid = os.getpid()
+    ready_event = multiprocessing.Event()
+
     yottadb.lock()
-    # Attempt to increment/decrement locks
-    processes = []
-    for key in keys_to_lock:
-        process = multiprocessing.Process(target=lock_value, args=(key, 0.1))
-        process.start()
-        processes.append(process)
-    for process in processes:
-        process.join()
-        assert process.exitcode == 0
+    print("## Test 1: Key.lock_incr() increments the lock level for the given key object")
+    print("# Run key.lock_incr() 10 times to increment lock level to 10")
+    key = yottadb.Key("test1")["sub1"]["sub2"]
+    for i in range(0, 10):
+        key.lock_incr()
+    print("# Confirm the lock level for the given key is 10")
+    result = yottadb.ci("ShowLocks", has_retval=True)
+    assert result == 'LOCK test1("sub1","sub2") LEVEL=10'
+    print("## Test 2: Key.lock_incr() decrements the lock level for the given key object")
+    print("# Run key.lock_decr() 10 times to decrement lock level from 10 to 0")
+    for i in range(0, 10):
+        key.lock_decr()
+    result = yottadb.ci("ShowLocks", has_retval=True)
+    print("# Confirm the lock level for the given key is 0")
+    assert result == "LOCK LEVEL=0"
 
-
-# Lock a Key using the class lock() method instead of the module method
-def test_lock_Key(simple_data):
+    print("## Test 3: yottadb.lock() and Key.lock() can be used to acquire and release the same locks")
     key = yottadb.Key("^test4")["sub1"]["sub2"]
-    # Attempt to get the lock
+    print("# Acquire a lock on the given key using Key.lock()")
     key.lock()
-    # Attempt to increment/decrement the lock
-    process = multiprocessing.Process(target=lock_value, args=(key, 0.1))
+    print("# Attempt to increment the lock from another process")
+    print("# Expect this to fail due to a YDBLockTimeoutError and")
+    print("# the child process to exit with a code of 1")
+    process = multiprocessing.Process(target=lock_value, args=(key, ppid, ready_event))
     process.start()
     process.join()
     assert process.exitcode == 1
-    # Release all locks
+    print("# Release all locks on the given key using yottadb.lock()")
     yottadb.lock()
-    # Attempt to increment/decrement the lock
-    process = multiprocessing.Process(target=lock_value, args=(key, 0.1))
+    print("# Again attempt to increment/decrement the previously locked resource to confirm it was released")
+    process = multiprocessing.Process(target=lock_value, args=(key, ppid, ready_event))
     process.start()
+    ready_event.wait()
+    print("# Send SIGINT to instruct child process to stop execution")
+    os.kill(process.pid, signal.SIGINT)
+    process.join()
+    assert process.exitcode == 0
+    print("# Clear the ready event for reuse in next subtest")
+    ready_event.clear()
+
+    print("## Test 4: Key.lock_incr() raises YDBLockTimeoutError when another")
+    print("## process holds a lock for the given Key value.")
+    print("# Create a child process to acquire and hold a lock on the given key")
+    key = yottadb.Key("^test2")["sub1"]
+    process = multiprocessing.Process(target=lock_value, args=(key, ppid, ready_event))
+    process.start()
+    print("# Wait for a signal from the child process to indicate that")
+    print("# a lock is held and notify the parent to continue execution.")
+    ready_event.wait()
+    print("# Once the lock is held, try to acquire it from the parent process")
+    print("# Expect a YDBLockTimeoutError since the child process holds the lock")
+    with pytest.raises(yottadb.YDBLockTimeoutError):
+        key.lock_incr()
+    result = yottadb.ci("ShowLocks", has_retval=True)
+    assert result == "LOCK LEVEL=0"
+    print("# Send SIGINT to instruct child process to stop execution")
+    os.kill(process.pid, signal.SIGINT)
     process.join()
     assert process.exitcode == 0
 
-
-def test_lock_incr_Key(new_db):
-    key = yottadb.Key("test1")["sub1"]["sub2"]
-    t1 = datetime.datetime.now()
-    key.lock_incr()
-    t2 = datetime.datetime.now()
-    time_elapse = t2.timestamp() - t1.timestamp()
-    assert time_elapse < 0.01
-    key.lock_decr()
-
-
-def test_lock_incr_Key_timeout_error(new_db):
-    # Timeout error, varname and subscript
-    key = yottadb.Key("^test2")["sub1"]
-    process = multiprocessing.Process(target=lock_value, args=(key,))
-    process.start()
-    time.sleep(0.1)  # Sleep just long enough for the process to start, but not so long that it exits
-    with pytest.raises(yottadb.YDBLockTimeoutError):
-        key.lock_incr()
-    process.join()
-
-    key2 = yottadb.Key("^test2")["sub1"]
-    process = multiprocessing.Process(target=lock_value, args=(key2,))
-    process.start()
-    time.sleep(0.1)  # Sleep just long enough for the process to start, but not so long that it exits
-    with pytest.raises(yottadb.YDBLockTimeoutError):
-        key2.lock_incr()
-    process.join()
-
-
-def test_lock_incr_Key_no_timeout(new_db):
-    # No timeout
-    key = yottadb.Key("^test2")["sub1"]
-    process = multiprocessing.Process(target=lock_value, args=(key,))
-    process.start()
-    time.sleep(0.1)  # Sleep just long enough for the process to start, but not so long that it exits
-    t1 = datetime.datetime.now()
-    yottadb.Key("test2").lock_incr()
-    t2 = datetime.datetime.now()
-    time_elapse = t2.timestamp() - t1.timestamp()
-    assert time_elapse < 0.01
-    key.lock_decr()
-    time.sleep(0.1)  # Sleep just long enough for the process to start, but not so long that it exits
-    process.join()
+    reset_ci_environment(previous)
 
 
 def test_YDB_ERR_TIME2LONG(new_db):
