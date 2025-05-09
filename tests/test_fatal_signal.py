@@ -1,6 +1,6 @@
 #################################################################
 #                                                               #
-# Copyright (c) 2021 YottaDB LLC and/or its subsidiaries.       #
+# Copyright (c) 2021-2025 YottaDB LLC and/or its subsidiaries.  #
 # All rights reserved.                                          #
 #                                                               #
 #   This source code contains the intellectual property         #
@@ -14,11 +14,13 @@ import psutil
 import time
 import random
 import signal
-from multiprocessing import Process
+from multiprocessing import Process, Event
 from test_threeenp1 import test_threeenp1
 
 
 def test_fatal_signal():
+    ready_event = Event()
+
     # Randomly assign a value(SIGTERM or SIGINT) to kill_signal
     # and the respective exit code value(241 or 254) to exit_code
     if random.randrange(2):
@@ -29,10 +31,11 @@ def test_fatal_signal():
         exit_code = 241
 
     # Start test_threeenp1.py as a child process
-    p = Process(target=test_threeenp1, args=(True, exit_code))
+    p = Process(target=test_threeenp1, args=(True, exit_code, ready_event))
     p.start()
 
-    time.sleep(1)
+    # Wait for process to spawn threads before killing it below
+    ready_event.wait()
 
     # Get parent PID, parent process and all child processes
     parent_pid = os.getpid()

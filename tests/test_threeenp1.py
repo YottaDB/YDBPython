@@ -1,6 +1,6 @@
 #################################################################
 #                                                               #
-# Copyright (c) 2021-2023 YottaDB LLC and/or its subsidiaries.  #
+# Copyright (c) 2021-2025 YottaDB LLC and/or its subsidiaries.  #
 # All rights reserved.                                          #
 #                                                               #
 #   This source code contains the intellectual property         #
@@ -219,7 +219,7 @@ def do_step(first: int, last: int, gvstats: dict):
 # and are required for a different test case (test_fatal_signal.py).
 # These arguments are needed to check the exit codes of the do_block processes,
 # when test_threeenp1 is invoked by test_fatal_signal.
-def test_threeenp1(fatal_signal_flag=False, exit_code=0):
+def test_threeenp1(fatal_signal_flag=False, exit_code=0, ready_event=None):
     try:
         db = setup_db()
         # Initialize global variables and store in an object for
@@ -281,6 +281,9 @@ def test_threeenp1(fatal_signal_flag=False, exit_code=0):
                 processes.append(process)
 
             start_time = datetime.datetime.now()  # Get starting time
+            if ready_event is not None:
+                # Signal to the caller to proceed
+                ready_event.set()
             # Wait for threads to finish
             for process in processes:
                 process.join()
