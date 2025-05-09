@@ -1,6 +1,6 @@
 #################################################################
 #                                                               #
-# Copyright (c) 2021-2022 YottaDB LLC and/or its subsidiaries.  #
+# Copyright (c) 2021-2025 YottaDB LLC and/or its subsidiaries.  #
 # All rights reserved.                                          #
 #                                                               #
 #   This source code contains the intellectual property         #
@@ -15,7 +15,7 @@ import os
 import yottadb
 
 
-# Constants for loading varnames and other things with
+# Constants for loading names and other things with
 MAX_VARNAME_LEN = 8
 MAX_WORDS_SUBS = 1
 MAX_INDEX_SUBS = 2
@@ -71,8 +71,8 @@ def test_wordfreq_key(new_db):
 
             # Iterate through words and store based on frequency
             index = yottadb.Key("^index")
-            for word in words:
-                index[words[word.name].value][word.name].value = ""
+            for word in words[""]:
+                index[words[word.leaf].value][word.leaf].value = ""
 
             # Print the keys ordered by amount
             with open("wordfreq_key.out", "w") as output_file:

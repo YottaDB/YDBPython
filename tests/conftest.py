@@ -100,31 +100,31 @@ def reset_ci_environment(previous: dict):
 
 
 # Lock a value in the database
-def lock_value(key: Union[yottadb.Key, tuple], ppid: int, ready_event, timeout: int = 1):
+def lock_value(node: Union[yottadb.Node, yottadb.Node, tuple], ppid: int, ready_event, timeout: int = 1):
     interrupt_event = multiprocessing.Event()
 
     # Create a handler to release the held lock and clean up the process
     # upon the reception of a signal from the parent process
     def handle_SIGINT(sig_num, stackframe):
         print("# SIGINT received")
-        yottadb.lock_decr(varname, subsarray)
+        yottadb.lock_decr(name, subsarray)
         print("# Lock Released")
         sys.exit(0)
 
-    # Extract the local or global variable name and subscripts from the given key object
-    if isinstance(key, yottadb.Key):
-        varname = key.varname
-        subsarray = key.subsarray
+    # Extract the local or global variable name and subscripts from the given node object
+    if isinstance(node, yottadb.Node):
+        name = node.name
+        subsarray = node.subsarray
     else:
-        varname = key[0]
-        subsarray = key[1]
+        name = node[0]
+        subsarray = node[1]
     if len(subsarray) == 0:
         subsarray = None
 
     # Attempt to lock the LVN or GVN using the module-level lock_incr() function
     has_lock = False
     try:
-        yottadb.lock_incr(varname, subsarray, timeout_nsec=(timeout * 1_000_000_000))
+        yottadb.lock_incr(name, subsarray, timeout_nsec=(timeout * 1_000_000_000))
         print("\n# Lock Success")
         has_lock = True
     except yottadb.YDBLockTimeoutError:
@@ -170,11 +170,10 @@ def setup_db() -> str:
     db["dir"] = prefix + suffix + "/"
 
     assert not os.path.exists(db["dir"])
-    pathlib.Path(db["dir"]).mkdir(parents=True, exist_ok=True)
+    os.makedirs(db["dir"])
 
     db["gld"] = db["dir"] + "test_db.gld"
     os.environ["ydb_gbldir"] = db["gld"]
-
     execute(f"{CUR_DIR}/tests/createdb.sh {YDB_DIST} {db['dir'] + 'test_db.dat'}")
 
     return db
@@ -197,13 +196,13 @@ def simple_data():
 
     db = setup_db()
 
-    for key, value in SIMPLE_DATA:
-        yottadb.set(key[0], key[1], value=value)
+    for node, value in SIMPLE_DATA:
+        yottadb.set(node[0], node[1], value=value)
 
     yield
 
-    for key, value in SIMPLE_DATA:
-        yottadb.delete_tree(key[0], key[1])
+    for node, value in SIMPLE_DATA:
+        yottadb.delete_tree(node[0], node[1])
 
     teardown_db(db)
 
@@ -221,3 +220,11 @@ def new_db():
     yield
 
     teardown_db(db)
+
+
+@pytest.fixture(autouse=True)
+def cleanup():
+
+    yield
+
+    yottadb.delete_except()

@@ -295,9 +295,9 @@ def test_lock_incr(new_db):
 
     print("## Test 1: _yottadb.lock_incr() raises timeout error when attempting to")
     print("## acquire a lock using only a variable name of type bytes with no subscripts")
-    print("# Create a child process to acquire and hold a lock on the given key")
-    key = ("^test1", ())
-    process = multiprocessing.Process(target=lock_value, args=(key, ppid, ready_event))
+    print("# Create a child process to acquire and hold a lock on the given node")
+    node = ("^test1", ())
+    process = multiprocessing.Process(target=lock_value, args=(node, ppid, ready_event))
     process.start()
     print("# Wait for a signal from the child process to indicate that")
     print("# a lock is held and notify the parent to continue execution.")
@@ -314,8 +314,8 @@ def test_lock_incr(new_db):
 
     print("## Test 2: _yottadb.lock_incr() raises timeout error when attempting to")
     print("## acquire a lock using only a variable name of type str with no subscripts")
-    print("# Create a child process to acquire and hold a lock on the given key")
-    process = multiprocessing.Process(target=lock_value, args=(key, ppid, ready_event))
+    print("# Create a child process to acquire and hold a lock on the given node")
+    process = multiprocessing.Process(target=lock_value, args=(node, ppid, ready_event))
     process.start()
     print("# Wait for a signal from the child process to indicate that")
     print("# a lock is held and notify the parent to continue execution.")
@@ -332,9 +332,9 @@ def test_lock_incr(new_db):
 
     print("## Test 3: _yottadb.lock_incr() raises timeout error when attempting to")
     print("## acquire a lock using a variable name and subscripts of type str")
-    print("# Create a child process to acquire and hold a lock on the given key")
-    key = ("^test2", ("sub1",))
-    process = multiprocessing.Process(target=lock_value, args=(key, ppid, ready_event))
+    print("# Create a child process to acquire and hold a lock on the given node")
+    node = ("^test2", ("sub1",))
+    process = multiprocessing.Process(target=lock_value, args=(node, ppid, ready_event))
     process.start()
     print("# Wait for a signal from the child process to indicate that")
     print("# a lock is held and notify the parent to continue execution.")
@@ -351,9 +351,9 @@ def test_lock_incr(new_db):
 
     print("## Test 4: _yottadb.lock_incr() raises timeout error when attempting to")
     print("## acquire a lock using a variable name and subscripts of type bytes")
-    print("# Create a child process to acquire and hold a lock on the given key")
-    key = (b"^test2", (b"sub1",))
-    process = multiprocessing.Process(target=lock_value, args=(key, ppid, ready_event))
+    print("# Create a child process to acquire and hold a lock on the given node")
+    node = (b"^test2", (b"sub1",))
+    process = multiprocessing.Process(target=lock_value, args=(node, ppid, ready_event))
     process.start()
     print("# Wait for a signal from the child process to indicate that")
     print("# a lock is held and notify the parent to continue execution.")
@@ -371,9 +371,9 @@ def test_lock_incr(new_db):
     print("## Test 5: _yottadb.lock_incr() does not raise a timeout error when attempting to")
     print("## acquire a lock that was previously acquired and released by another process")
     print("## using a variable name and subscripts of type str")
-    print("# Create a child process to acquire and hold a lock on the given key")
-    key = ("^test2", ("sub1",))
-    process = multiprocessing.Process(target=lock_value, args=(key, ppid, ready_event))
+    print("# Create a child process to acquire and hold a lock on the given node")
+    node = ("^test2", ("sub1",))
+    process = multiprocessing.Process(target=lock_value, args=(node, ppid, ready_event))
     process.start()
     print("# Wait for a signal from the child process to indicate that")
     print("# a lock is held and notify the parent to continue execution.")
@@ -403,9 +403,9 @@ def test_lock_incr(new_db):
     print("## Test 6: _yottadb.lock_incr() does not raise a timeout error when attempting to")
     print("## acquire a lock that was previously acquired and released by another process")
     print("## using a variable name and subscripts of type bytes")
-    print("# Create a child process to acquire and hold a lock on the given key")
-    key = (b"^test2", (b"sub1",))
-    process = multiprocessing.Process(target=lock_value, args=(key, ppid, ready_event))
+    print("# Create a child process to acquire and hold a lock on the given node")
+    node = (b"^test2", (b"sub1",))
+    process = multiprocessing.Process(target=lock_value, args=(node, ppid, ready_event))
     process.start()
     print("# Wait for a signal from the child process to indicate that")
     print("# a lock is held and notify the parent to continue execution.")
@@ -434,9 +434,9 @@ def test_lock_incr(new_db):
 
     print("## Test 7: _yottadb.lock_incr() and _yottadb.lock_decr() do not raise a timeout error when attempting to")
     print("## increment or decrement locks on local variables while another process holds locks on global variables")
-    print("# Create a child process to acquire and hold a lock on the given key")
-    key = (b"^test2", (b"sub1",))
-    process = multiprocessing.Process(target=lock_value, args=(key, ppid, ready_event))
+    print("# Create a child process to acquire and hold a lock on the given node")
+    node = (b"^test2", (b"sub1",))
+    process = multiprocessing.Process(target=lock_value, args=(node, ppid, ready_event))
     process.start()
     print("# Wait for a signal from the child process to indicate that")
     print("# a lock is held and notify the parent to continue execution.")
@@ -468,23 +468,23 @@ def no_action() -> None:
     pass
 
 
-def set_key(key: tuple, value: str) -> None:
-    _yottadb.set(key[0], key[1], value=value)
+def set_node(node: tuple, value: str) -> None:
+    _yottadb.set(node[0], node[1], value=value)
 
 
-def incr_key(key: tuple, increment: str) -> None:
-    _yottadb.incr(key[0], key[1], increment=increment)
+def incr_node(node: tuple, increment: str) -> None:
+    _yottadb.incr(node[0], node[1], increment=increment)
 
 
-def conditional_set_key(key1: tuple, key2: tuple, value: str, traker_key: tuple) -> None:
-    if _yottadb.data(traker_key[0], traker_key[1]) == _yottadb.YDB_DATA_UNDEF:
-        _yottadb.set(key1[0], key1[1], value=value)
+def conditional_set_node(node1: tuple, node2: tuple, value: str, traker_node: tuple) -> None:
+    if _yottadb.data(traker_node[0], traker_node[1]) == _yottadb.YDB_DATA_UNDEF:
+        _yottadb.set(node1[0], node1[1], value=value)
     else:
-        _yottadb.set(key2[0], key2[1], value=value)
+        _yottadb.set(node2[0], node2[1], value=value)
 
 
-def raise_YDBError(undefined_key: tuple) -> None:
-    _yottadb.get(undefined_key[0], undefined_key[1])
+def raise_YDBError(undefined_node: tuple) -> None:
+    _yottadb.get(undefined_node[0], undefined_node[1])
 
 
 def raise_standard_python_exception() -> None:
@@ -497,7 +497,7 @@ class TransactionData(NamedTuple):
     action: Callable = no_action
     action_arguments: Tuple = ()
     varnames: Optional[Sequence[str]] = None
-    restart_key: tuple = ("tptests", ("process_transation", "default"))
+    restart_node: tuple = ("tptests", ("process_transation", "default"))
     return_value: int = _yottadb.YDB_OK
     restart_timeout: float = -1
     restart_timeout_return_value: int = _yottadb.YDB_OK
@@ -528,8 +528,8 @@ def process_transaction(nested_transaction_data: Tuple[TransactionData], start_t
             seconds=current_data.restart_timeout
         ):
             return current_data.restart_timeout_return_value
-        elif _yottadb.data(*current_data.restart_key) == _yottadb.YDB_DATA_UNDEF:
-            _yottadb.incr(*current_data.restart_key)
+        elif _yottadb.data(*current_data.restart_node) == _yottadb.YDB_DATA_UNDEF:
+            _yottadb.incr(*current_data.restart_node)
             return _yottadb.YDB_TP_RESTART
         else:
             return _yottadb.YDB_OK
@@ -541,153 +541,153 @@ def process_transaction(nested_transaction_data: Tuple[TransactionData], start_t
 
 
 def test_tp_return_YDB_OK(new_db):
-    key = ("^tptests", ("test_tp_return_YDB_OK",))
+    node = ("^tptests", ("test_tp_return_YDB_OK",))
     value = b"return YDB_OK"
-    transaction_data = TransactionData(action=set_key, action_arguments=(key, value), return_value=_yottadb.YDB_OK)
-    _yottadb.delete(*key)
-    assert _yottadb.data(*key) == _yottadb.YDB_DATA_UNDEF
+    transaction_data = TransactionData(action=set_node, action_arguments=(node, value), return_value=_yottadb.YDB_OK)
+    _yottadb.delete(*node)
+    assert _yottadb.data(*node) == _yottadb.YDB_DATA_UNDEF
 
     _yottadb.tp(process_transaction, kwargs={"nested_transaction_data": (transaction_data,)})
 
-    assert _yottadb.get(*key) == value
+    assert _yottadb.get(*node) == value
     _yottadb.delete("^tptests", delete_type=_yottadb.YDB_DEL_TREE)
 
 
 def test_tp_nested_return_YDB_OK(new_db):
-    key1 = ("^tptests", ("test_tp_nested_return_YDB_OK", "outer"))
+    node1 = ("^tptests", ("test_tp_nested_return_YDB_OK", "outer"))
     value1 = b"return_YDB_OK"
-    outer_transaction = TransactionData(action=set_key, action_arguments=(key1, value1), return_value=_yottadb.YDB_OK)
-    key2 = ("^tptests", ("test_tp_nested_return_YDB_OK", "nested"))
+    outer_transaction = TransactionData(action=set_node, action_arguments=(node1, value1), return_value=_yottadb.YDB_OK)
+    node2 = ("^tptests", ("test_tp_nested_return_YDB_OK", "nested"))
     value2 = b"nested return_YDB_OK"
-    inner_transaction = TransactionData(action=set_key, action_arguments=(key2, value2), return_value=_yottadb.YDB_OK)
+    inner_transaction = TransactionData(action=set_node, action_arguments=(node2, value2), return_value=_yottadb.YDB_OK)
 
     _yottadb.tp(process_transaction, kwargs={"nested_transaction_data": (outer_transaction, inner_transaction)})
 
-    assert _yottadb.get(*key1) == value1
-    assert _yottadb.get(*key2) == value2
+    assert _yottadb.get(*node1) == value1
+    assert _yottadb.get(*node2) == value2
     _yottadb.delete("^tptests", delete_type=_yottadb.YDB_DEL_TREE)
 
 
 def test_tp_return_YDB_ROLLBACK(new_db):
-    key = ("^tptests", ("test_tp_return_YDB_ROLLBACK",))
+    node = ("^tptests", ("test_tp_return_YDB_ROLLBACK",))
     value = "return YDB_ROLLBACK"
-    transation_data = TransactionData(action=set_key, action_arguments=(key, value), return_value=_yottadb.YDB_TP_ROLLBACK)
-    _yottadb.delete(*key)
-    assert _yottadb.data(*key) == _yottadb.YDB_DATA_UNDEF
+    transation_data = TransactionData(action=set_node, action_arguments=(node, value), return_value=_yottadb.YDB_TP_ROLLBACK)
+    _yottadb.delete(*node)
+    assert _yottadb.data(*node) == _yottadb.YDB_DATA_UNDEF
 
     with pytest.raises(_yottadb.YDBTPRollback):
         _yottadb.tp(process_transaction, kwargs={"nested_transaction_data": (transation_data,)})
 
-    assert _yottadb.data(*key) == _yottadb.YDB_DATA_UNDEF
+    assert _yottadb.data(*node) == _yottadb.YDB_DATA_UNDEF
     _yottadb.delete("^tptests", delete_type=_yottadb.YDB_DEL_TREE)
 
 
 def test_nested_return_YDB_ROLLBACK(new_db):
-    key1 = ("^tptests", ("test_nested_return_YDB_ROLLBACK", "outer"))
+    node1 = ("^tptests", ("test_nested_return_YDB_ROLLBACK", "outer"))
     value1 = "return YDB_ROLLBACK"
-    outer_transaction = TransactionData(action=set_key, action_arguments=(key1, value1), return_value=_yottadb.YDB_TP_ROLLBACK)
-    key2 = ("^tptests", ("test_nested_return_YDB_ROLLBACK", "nested"))
+    outer_transaction = TransactionData(action=set_node, action_arguments=(node1, value1), return_value=_yottadb.YDB_TP_ROLLBACK)
+    node2 = ("^tptests", ("test_nested_return_YDB_ROLLBACK", "nested"))
     value2 = "nested return YDB_ROLLBACK"
-    inner_transaction = TransactionData(action=set_key, action_arguments=(key2, value2), return_value=_yottadb.YDB_TP_ROLLBACK)
-    _yottadb.delete(*key1)
-    _yottadb.delete(*key2)
-    assert _yottadb.data(*key1) == _yottadb.YDB_DATA_UNDEF
-    assert _yottadb.data(*key2) == _yottadb.YDB_DATA_UNDEF
+    inner_transaction = TransactionData(action=set_node, action_arguments=(node2, value2), return_value=_yottadb.YDB_TP_ROLLBACK)
+    _yottadb.delete(*node1)
+    _yottadb.delete(*node2)
+    assert _yottadb.data(*node1) == _yottadb.YDB_DATA_UNDEF
+    assert _yottadb.data(*node2) == _yottadb.YDB_DATA_UNDEF
 
     with pytest.raises(_yottadb.YDBTPRollback):
         _yottadb.tp(process_transaction, kwargs={"nested_transaction_data": (outer_transaction, inner_transaction)})
 
-    assert _yottadb.data(*key1) == _yottadb.YDB_DATA_UNDEF
-    assert _yottadb.data(*key2) == _yottadb.YDB_DATA_UNDEF
+    assert _yottadb.data(*node1) == _yottadb.YDB_DATA_UNDEF
+    assert _yottadb.data(*node2) == _yottadb.YDB_DATA_UNDEF
     _yottadb.delete("^tptests", delete_type=_yottadb.YDB_DEL_TREE)
 
 
 def test_tp_return_YDB_TP_RESTART(new_db):
-    key1 = ("^tptests", ("test_tp_return_YDB_TP_RESTART", "key1"))
-    _yottadb.delete(*key1)
-    key2 = ("^tptests", ("test_tp_return_YDB_TP_RESTART", "key2"))
-    _yottadb.delete(*key2)
+    node1 = ("^tptests", ("test_tp_return_YDB_TP_RESTART", "node1"))
+    _yottadb.delete(*node1)
+    node2 = ("^tptests", ("test_tp_return_YDB_TP_RESTART", "node2"))
+    _yottadb.delete(*node2)
     value = b"restart once"
     tracker = ("tptests", ("test_tp_return_YDB_RESET", "reset count"))
     transaction_data = TransactionData(
-        action=conditional_set_key,
-        action_arguments=(key1, key2, value, tracker),
-        restart_key=tracker,
+        action=conditional_set_node,
+        action_arguments=(node1, node2, value, tracker),
+        restart_node=tracker,
         return_value=_yottadb.YDB_TP_RESTART,
     )
 
     _yottadb.tp(process_transaction, kwargs={"nested_transaction_data": (transaction_data,)})
 
     try:
-        _yottadb.get(*key1)
+        _yottadb.get(*node1)
     except YDBError as e:
         assert _yottadb.YDB_ERR_GVUNDEF == e.code()
-    assert _yottadb.get(*key2) == value
+    assert _yottadb.get(*node2) == value
     assert int(_yottadb.get(*tracker)) == 1
 
     _yottadb.delete("^tptests", delete_type=_yottadb.YDB_DEL_TREE)
 
 
 def test_nested_tp_return_YDB_TP_RESTART(new_db):
-    key1_1 = ("^tptests", ("test_nested_tp_return_YDB_TP_RESTART", "outer", "key1"))
-    _yottadb.delete(*key1_1)
-    key1_2 = ("^tptests", ("test_nested_tp_return_YDB_TP_RESTART", "outer", "key2"))
-    _yottadb.delete(*key1_2)
+    node1_1 = ("^tptests", ("test_nested_tp_return_YDB_TP_RESTART", "outer", "node1"))
+    _yottadb.delete(*node1_1)
+    node1_2 = ("^tptests", ("test_nested_tp_return_YDB_TP_RESTART", "outer", "node2"))
+    _yottadb.delete(*node1_2)
     value1 = b"outer restart once"
     tracker1 = ("tptests", ("test_nested_tp_return_YDB_TP_RESTART", "outer reset count"))
     outer_transaction = TransactionData(
-        action=conditional_set_key,
-        action_arguments=(key1_1, key1_2, value1, tracker1),
-        restart_key=tracker1,
+        action=conditional_set_node,
+        action_arguments=(node1_1, node1_2, value1, tracker1),
+        restart_node=tracker1,
         return_value=_yottadb.YDB_TP_RESTART,
     )
 
-    key2_1 = ("^tptests", ("test_nested_tp_return_YDB_TP_RESTART", "inner", "key1"))
-    _yottadb.delete(*key2_1)
-    key2_2 = ("^tptests", ("test_nested_tp_return_YDB_TP_RESTART", "inner", "key2"))
-    _yottadb.delete(*key2_2)
+    node2_1 = ("^tptests", ("test_nested_tp_return_YDB_TP_RESTART", "inner", "node1"))
+    _yottadb.delete(*node2_1)
+    node2_2 = ("^tptests", ("test_nested_tp_return_YDB_TP_RESTART", "inner", "node2"))
+    _yottadb.delete(*node2_2)
     value2 = b"inner restart once"
     tracker2 = ("tptests", ("test_nested_tp_return_YDB_TP_RESTART", "inner reset count"))
     inner_transaction = TransactionData(
-        action=conditional_set_key,
-        action_arguments=(key2_1, key2_2, value2, tracker2),
-        restart_key=tracker2,
+        action=conditional_set_node,
+        action_arguments=(node2_1, node2_2, value2, tracker2),
+        restart_node=tracker2,
         return_value=_yottadb.YDB_TP_RESTART,
     )
 
     _yottadb.tp(process_transaction, kwargs={"nested_transaction_data": (outer_transaction, inner_transaction)})
 
     try:
-        _yottadb.get(*key1_1)
+        _yottadb.get(*node1_1)
     except YDBError as e:
         assert _yottadb.YDB_ERR_GVUNDEF == e.code()
-    assert _yottadb.get(*key1_2) == value1
+    assert _yottadb.get(*node1_2) == value1
     assert int(_yottadb.get(*tracker1)) == 1
     try:
-        _yottadb.get(*key2_1)
+        _yottadb.get(*node2_1)
     except YDBError as e:
         assert _yottadb.YDB_ERR_GVUNDEF == e.code()
-    assert _yottadb.get(*key2_2) == value2
+    assert _yottadb.get(*node2_2) == value2
     assert int(_yottadb.get(*tracker2)) == 1
 
-    _yottadb.delete(*key1_1)
-    _yottadb.delete(*key1_2)
+    _yottadb.delete(*node1_1)
+    _yottadb.delete(*node1_2)
     _yottadb.delete(*tracker1)
-    _yottadb.delete(*key2_1)
-    _yottadb.delete(*key2_2)
+    _yottadb.delete(*node2_1)
+    _yottadb.delete(*node2_2)
     _yottadb.delete(*tracker2)
     _yottadb.delete("^tptests", delete_type=_yottadb.YDB_DEL_TREE)
 
 
 def test_tp_return_YDB_TP_RESTART_reset_all(new_db):
-    key = ("^tptests", ("test_tp_return_YDB_TP_RESTART_reset_all", "resetvalue"))
+    node = ("^tptests", ("test_tp_return_YDB_TP_RESTART_reset_all", "resetvalue"))
     tracker = ("tptests", ("test_tp_return_YDB_TP_RESTART_reset_all", "reset_count"))
-    _yottadb.delete(*key)
+    _yottadb.delete(*node)
 
     transaction_data = TransactionData(
-        action=incr_key,
-        action_arguments=(key, "1"),
-        restart_key=tracker,
+        action=incr_node,
+        action_arguments=(node, "1"),
+        restart_node=tracker,
         return_value=_yottadb.YDB_TP_RESTART,
         restart_timeout=0.01,
         restart_timeout_return_value=_yottadb.YDB_OK,
@@ -699,7 +699,7 @@ def test_tp_return_YDB_TP_RESTART_reset_all(new_db):
         varnames=("*",),
     )
 
-    assert _yottadb.get(*key) == b"1"
+    assert _yottadb.get(*node) == b"1"
     try:
         _yottadb.get(*tracker)
     except YDBError as e:
@@ -708,39 +708,39 @@ def test_tp_return_YDB_TP_RESTART_reset_all(new_db):
 
 
 def test_tp_return_YDB_ERR_TPTIMEOUT(new_db):
-    key = ("^tptests", ("test_tp_return_YDB_ERR_TPTIMEOUT",))
+    node = ("^tptests", ("test_tp_return_YDB_ERR_TPTIMEOUT",))
     value = b"return YDB_ERR_TPTIMEOUT"
-    transaction_data = TransactionData(action=set_key, action_arguments=(key, value), return_value=_yottadb.YDB_ERR_TPTIMEOUT)
-    _yottadb.delete(*key)
-    assert _yottadb.data(*key) == _yottadb.YDB_DATA_UNDEF
+    transaction_data = TransactionData(action=set_node, action_arguments=(node, value), return_value=_yottadb.YDB_ERR_TPTIMEOUT)
+    _yottadb.delete(*node)
+    assert _yottadb.data(*node) == _yottadb.YDB_DATA_UNDEF
 
     with pytest.raises(YDBTPTimeoutError):
         _yottadb.tp(process_transaction, kwargs={"nested_transaction_data": (transaction_data,)})
 
-    assert _yottadb.data(*key) == _yottadb.YDB_DATA_UNDEF
+    assert _yottadb.data(*node) == _yottadb.YDB_DATA_UNDEF
     _yottadb.delete("^tptests", delete_type=_yottadb.YDB_DEL_TREE)
 
 
 def test_tp_nested_return_YDB_ERR_TPTIMEOUT(new_db):
-    key1 = ("^tptests", ("test_nested_return_YDB_ERR_TPTIMEOUT", "outer"))
+    node1 = ("^tptests", ("test_nested_return_YDB_ERR_TPTIMEOUT", "outer"))
     value1 = "return YDB_ERR_TPTIMEOUT"
-    outer_transaction = TransactionData(action=set_key, action_arguments=(key1, value1), return_value=_yottadb.YDB_ERR_TPTIMEOUT)
-    key2 = ("^tptests", ("test_nested_return_YDB_ERR_TPTIMEOUT", "nested"))
+    outer_transaction = TransactionData(action=set_node, action_arguments=(node1, value1), return_value=_yottadb.YDB_ERR_TPTIMEOUT)
+    node2 = ("^tptests", ("test_nested_return_YDB_ERR_TPTIMEOUT", "nested"))
     value2 = "nested return YDB_ERR_TPTIMEOUT"
-    inner_transaction = TransactionData(action=set_key, action_arguments=(key2, value2), return_value=_yottadb.YDB_ERR_TPTIMEOUT)
+    inner_transaction = TransactionData(action=set_node, action_arguments=(node2, value2), return_value=_yottadb.YDB_ERR_TPTIMEOUT)
 
     with pytest.raises(YDBTPTimeoutError):
         _yottadb.tp(process_transaction, kwargs={"nested_transaction_data": (outer_transaction, inner_transaction)})
 
-    assert _yottadb.data(*key1) == _yottadb.YDB_DATA_UNDEF
-    assert _yottadb.data(*key2) == _yottadb.YDB_DATA_UNDEF
+    assert _yottadb.data(*node1) == _yottadb.YDB_DATA_UNDEF
+    assert _yottadb.data(*node2) == _yottadb.YDB_DATA_UNDEF
     _yottadb.delete("^tptests", delete_type=_yottadb.YDB_DEL_TREE)
 
 
 def test_tp_raise_YDBError(new_db):
-    key = ("^tptests", ("test_tp_raise_YDBError",))
-    assert _yottadb.data(*key) == _yottadb.YDB_DATA_UNDEF
-    transaction_data = TransactionData(action=raise_YDBError, action_arguments=(key,))
+    node = ("^tptests", ("test_tp_raise_YDBError",))
+    assert _yottadb.data(*node) == _yottadb.YDB_DATA_UNDEF
+    transaction_data = TransactionData(action=raise_YDBError, action_arguments=(node,))
 
     try:
         _yottadb.tp(process_transaction, kwargs={"nested_transaction_data": (transaction_data,)})
@@ -751,9 +751,9 @@ def test_tp_raise_YDBError(new_db):
 
 def test_tp_nested_raise_YDBError(new_db):
     outer_transaction = TransactionData()
-    key = ("^tptests", ("test_nested_tp_raise_YDBError",))
-    inner_transaction = TransactionData(action=raise_YDBError, action_arguments=(key,))
-    assert _yottadb.data(*key) == _yottadb.YDB_DATA_UNDEF
+    node = ("^tptests", ("test_nested_tp_raise_YDBError",))
+    inner_transaction = TransactionData(action=raise_YDBError, action_arguments=(node,))
+    assert _yottadb.data(*node) == _yottadb.YDB_DATA_UNDEF
 
     try:
         _yottadb.tp(process_transaction, kwargs={"nested_transaction_data": (outer_transaction, inner_transaction)})
@@ -783,7 +783,7 @@ YDB_MAX_TP_DEPTH = 126
 
 @pytest.mark.parametrize("depth", range(1, YDB_MAX_TP_DEPTH + 1))
 def test_tp_return_YDB_OK_to_depth(depth):
-    def key_at_level(level: int) -> tuple:
+    def node_at_level(level: int) -> tuple:
         return ("^tptests", (f"test_tp_return_YDB_to_depth{depth}", f"level{level}"))
 
     def value_at_level(level: int) -> bytes:
@@ -793,15 +793,15 @@ def test_tp_return_YDB_OK_to_depth(depth):
 
     transaction_data = []
     for level in range(0, depth):
-        transaction_data.append(TransactionData(action=set_key, action_arguments=(key_at_level(level), value_at_level(level))))
+        transaction_data.append(TransactionData(action=set_node, action_arguments=(node_at_level(level), value_at_level(level))))
 
     _yottadb.tp(process_transaction, kwargs={"nested_transaction_data": transaction_data})
 
     for level in range(0, depth):
-        assert _yottadb.get(*key_at_level(level)) == value_at_level(level)
+        assert _yottadb.get(*node_at_level(level)) == value_at_level(level)
 
     for level in range(0, depth):
-        _yottadb.delete(*key_at_level(level))
+        _yottadb.delete(*node_at_level(level))
     _yottadb.delete("^tptests", delete_type=_yottadb.YDB_DEL_TREE)
 
     teardown_db(db)
@@ -924,6 +924,8 @@ def test_subscript_next_1(simple_data):
 def test_subscript_next_long():
     _yottadb.set(varname="testLongSubscript", subsarray=("a" * _yottadb.YDB_MAX_STR,), value="toolong")
     assert _yottadb.subscript_next(varname="testLongSubscript", subsarray=("",)) == b"a" * _yottadb.YDB_MAX_STR
+    # Cleanup LVN in process memory
+    _yottadb.delete(varname="testLongSubscript", subsarray=("a" * _yottadb.YDB_MAX_STR,))
 
 
 def test_subscript_next_i18n():
@@ -957,6 +959,8 @@ def test_subscript_previous_1(simple_data):
 def test_subscript_previous_long():
     _yottadb.set(varname="testLongSubscript", subsarray=("a" * _yottadb.YDB_MAX_STR,), value="toolong")
     assert _yottadb.subscript_previous(varname="testLongSubscript", subsarray=("",)) == b"a" * _yottadb.YDB_MAX_STR
+    # Cleanup LVN in process memory
+    _yottadb.delete(varname="testLongSubscript", subsarray=("a" * _yottadb.YDB_MAX_STR,))
 
 
 def test_node_next_1(simple_data):
@@ -997,12 +1001,12 @@ def test_lock_blocking_other(simple_data):
     t1 = ("^test1", ())
     t2 = ("^test2", ("sub1",))
     t3 = ("^test3", ("sub1", "sub2"))
-    keys_to_lock = (t1, t2, t3)
-    _yottadb.lock(keys=keys_to_lock, timeout_nsec=0)
+    nodes_to_lock = (t1, t2, t3)
+    _yottadb.lock(nodes=nodes_to_lock, timeout_nsec=0)
     print("# Attempt to increment/decrement locks")
     processes = []
-    for key in keys_to_lock:
-        process = multiprocessing.Process(target=lock_value, args=(key, ppid, ready_event))
+    for node in nodes_to_lock:
+        process = multiprocessing.Process(target=lock_value, args=(node, ppid, ready_event))
         process.start()
         process.join()
         assert process.exitcode == 1
@@ -1011,9 +1015,9 @@ def test_lock_blocking_other(simple_data):
     _yottadb.lock()
     print("# Attempt to increment/decrement locks")
     processes = []
-    for key in keys_to_lock:
+    for node in nodes_to_lock:
         ready_event = multiprocessing.Event()
-        process = multiprocessing.Process(target=lock_value, args=(key, ppid, ready_event))
+        process = multiprocessing.Process(target=lock_value, args=(node, ppid, ready_event))
         process.start()
         ready_event.wait()
         processes.append(process)
@@ -1028,12 +1032,12 @@ def test_lock_being_blocked(new_db):
     ppid = os.getpid()
     ready_event = multiprocessing.Event()
 
-    key = ("^test1", ())
-    process = multiprocessing.Process(target=lock_value, args=(key, ppid, ready_event))
+    node = ("^test1", ())
+    process = multiprocessing.Process(target=lock_value, args=(node, ppid, ready_event))
     process.start()
     ready_event.wait()
     with pytest.raises(_yottadb.YDBLockTimeoutError):
-        _yottadb.lock([key])
+        _yottadb.lock([node])
     os.kill(process.pid, signal.SIGINT)
     process.join()
     assert process.exitcode == 0
@@ -1135,14 +1139,14 @@ increment_test_ids = [
     f'"{initial}" | "{type(increment).__name__}({increment})" | {result}' for initial, increment, result in increment_tests
 ]
 
-increment_keys = [
+increment_nodes = [
     ("testincrparametrized", ()),
     ("^testincrparametrized", ()),
     ("^testincrparametrized", ("sub1",)),
     ("testincrparametrized", ("sub1",)),
 ]
 
-increment_key_test_ids = [f'"{key[0]}({key[1]})' for key in increment_keys]
+increment_node_test_ids = [f'"{node[0]}({node[1]})' for node in increment_nodes]
 
 
 def number_to_str(number):
@@ -1155,16 +1159,16 @@ def number_to_str(number):
 
 
 @pytest.mark.parametrize("initial, increment, result", increment_tests, ids=increment_test_ids)
-@pytest.mark.parametrize("key", increment_keys, ids=increment_key_test_ids)
-def test_incr(key, initial, increment, result):
+@pytest.mark.parametrize("node", increment_nodes, ids=increment_node_test_ids)
+def test_incr(node, initial, increment, result):
     db = setup_db()
 
-    _yottadb.set(*key, value=initial)
-    returned_value = _yottadb.incr(*key, increment=number_to_str(increment))
+    _yottadb.set(*node, value=initial)
+    returned_value = _yottadb.incr(*node, increment=number_to_str(increment))
 
     assert returned_value == bytes(result, encoding="utf8")
-    assert _yottadb.get(*key) == bytes(result, encoding="ascii")
-    _yottadb.delete(*key, _yottadb.YDB_DEL_TREE)
+    assert _yottadb.get(*node) == bytes(result, encoding="ascii")
+    _yottadb.delete(*node, _yottadb.YDB_DEL_TREE)
 
     teardown_db(db)
 
@@ -1182,17 +1186,17 @@ increment_test_ids = [
 
 
 @pytest.mark.parametrize("initial, increment, error_type", increment_error_test, ids=increment_test_ids)
-@pytest.mark.parametrize("key", increment_keys, ids=increment_key_test_ids)
-def test_incr_errors(key, initial, increment, error_type):
+@pytest.mark.parametrize("node", increment_nodes, ids=increment_node_test_ids)
+def test_incr_errors(node, initial, increment, error_type):
     db = setup_db()
-    _yottadb.set(*key, value=initial)
+    _yottadb.set(*node, value=initial)
 
     try:
-        _yottadb.incr(*key, increment=number_to_str(increment))
+        _yottadb.incr(*node, increment=number_to_str(increment))
     except _yottadb.YDBError as e:
         assert error_type == e.code()
-        assert _yottadb.get(*key) == initial
-    _yottadb.delete(*key, _yottadb.YDB_DEL_TREE)
+        assert _yottadb.get(*node) == initial
+    _yottadb.delete(*node, _yottadb.YDB_DEL_TREE)
 
     teardown_db(db)
 

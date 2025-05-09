@@ -21,3 +21,4 @@ sorted_warnings.txt
 warnings.txt
 tmp*
 *.so
+temp_warnings.txt

@@ -1,0 +1,32 @@
+# YDBPython Changelog
+
+## 2.0.0
+
++ Renamed `Key` class was to `Node` and replaced all references to `Key`, `key`, and `KEY` where revised to `Node`, `node`, and `NODE` throughout
++ Fixed the behavior of `Node.subscript_next()` and `Node.subscript_previous()` to return only the next or previous subscript or variable name for the given level of the calling `Node` in all cases, rather than potentially returning a different value across successive calls.
++ Removed various fields and properties from the `Node` class were added, revised, or removed, including:
+	- Revised all `Node` field names to use Python `_` convention to signify that they are private
+	- Removed `next_subsarray`, since it was only used to store state for `Key.subscript_next()` and `Key.subscript_previous()`.
+	- Moved `parent` into new `@property` method, which returns a new `Node` object representing the parent node of the caller
+	- Added `_subsarray` field replaces the function previously served by `parent`, namely, storing the subscript array for the given `Node` object
+	- Added `_mutable` field, to track whether or not a given `Node` object may be changed
+	- Added a new `leaf` property was added to replace and make explicit the previous, implicit behavior of the former `name` field. Specifically, this property returns the last subscript in the subscript array of the `Node` or the variable name if there is no subscript array.
+	- Added new `has_both` and `has_neither` properties were for checking whether the given `Node` has both a value and a subtree, or neither a value nor a subtree
+	- Renamed `has_tree` to `has_subtree` for the sake of explicitness
+	- Removed `varname`: this behavior is now served by the `Node._name` field
+	- Removed `varname_key`: this behavior is now served by calling `Node(node.name)`
+	- Removed `subsarray_keys`: this behavior was deemed unnecessary, and can otherwise be replicated using a combination of other class methods
++ Various fixes and enhancements to `Node.__init__()`:
+	- Fixed "gotcha" by revising the function to take a shallow copy of passed subscript arrays instead of a reference
+	- Prototype revised to allow `subsarray` parameter to be passed implicitly after the `name` parameter
+	- Removed the now deprecated `parent` parameter
++ Added new `Node` class methods:
+	- `.mutate()`: returns a new, mutable `Node` object with the last subscript or variable name of the calling `Node` object revised to the passed `name` value.
+	- `.copy()`: create a new *immutable* copy of the current `Node` object.
+	- `.__call__()`: allows the creation of new immutable `Node`s by concatenating the passed subscript names with the variable name and subscripts of the calling `Node` object.
++ `Node.__iter__()` was revised to use the new `.mutate()` method to return a single, new mutable `Node`, instead of generating new `Node`s based on the state stored by `Node.next_subsarray`.
++ Removed dead debug code from `__init__.py`
++ Test fixes:
+	- Revised `setup_db` to use `os.makedirs()` to ensure directories are created - previously they were not
+	- Revised `test__yottadb.py` to cleanup local variable nodes to prevent interference across test cases
+	- Added a new `cleanup()` fixture was added to `conftest.py` to kill all local variables after each test to prevent cross-test interference.

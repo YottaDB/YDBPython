@@ -2,7 +2,7 @@
  *                                                              *
  * Copyright (c) 2020-2021 Peter Goss All rights reserved.      *
  *                                                              *
- * Copyright (c) 2020-2022 YottaDB LLC and/or its subsidiaries. *
+ * Copyright (c) 2020-2025 YottaDB LLC and/or its subsidiaries. *
  * All rights reserved.                                         *
  *                                                              *
  *  This source code contains the intellectual property         *
@@ -21,9 +21,9 @@
 #define CANONICAL_NUMBER_TO_STRING_MAX 48
 
 #define YDB_LOCK_MIN_ARGS		2
-#define YDB_LOCK_ARGS_PER_KEY		3
+#define YDB_LOCK_ARGS_PER_NODE		3
 #define YDB_CALL_VARIADIC_MAX_ARGUMENTS 36
-#define YDB_LOCK_MAX_KEYS		(YDB_CALL_VARIADIC_MAX_ARGUMENTS - YDB_LOCK_MIN_ARGS) / YDB_LOCK_ARGS_PER_KEY
+#define YDB_LOCK_MAX_NODES		(YDB_CALL_VARIADIC_MAX_ARGUMENTS - YDB_LOCK_MIN_ARGS) / YDB_LOCK_ARGS_PER_NODE
 
 /* Large enough to fit any YDB error message, per
  * https://docs.yottadb.com/ProgrammersGuide/extrout.html#ydb-zstatus
@@ -52,7 +52,7 @@ typedef enum YDBPythonErrorType {
 typedef enum YDBPythonSequenceType {
 	YDBPython_VarnameSequence,
 	YDBPython_SubsarraySequence,
-	YDBPython_KeySequence,
+	YDBPython_NodeSequence,
 } YDBPythonSequenceType;
 
 // TypeError messages
@@ -64,26 +64,26 @@ typedef enum YDBPythonSequenceType {
 #define YDBPY_ERR_INVALID_CI_ARG_TYPE \
 	"YottaDB call-in routine '%s' parameter %d has invalid type: must be str, bytes, int, or float"
 #define YDBPY_ERR_CI_PARM_UNDEFINED		    "YottaDB call-in routine %s parameter %d not defined in call-in table"
-#define YDBPY_ERR_NOT_LIST_OR_TUPLE		    "key must be list or tuple."
+#define YDBPY_ERR_NOT_LIST_OR_TUPLE		    "node must be list or tuple."
 #define YDBPY_ERR_VARNAME_NOT_BYTES_LIKE	    "varname argument is not a bytes-like object (bytes or str)"
 #define YDBPY_ERR_ARG_NOT_BYTES_LIKE		    "argument is not a bytes-like object (bytes or str)"
 #define YDBPY_ERR_ITEM_NOT_BYTES_LIKE		    "item %ld is not a bytes-like object (bytes or str)"
-#define YDBPY_ERR_KEY_IN_SEQUENCE_NOT_LIST_OR_TUPLE "item %ld is not a list or tuple."
-#define YDBPY_ERR_KEY_IN_SEQUENCE_VARNAME_NOT_BYTES "item %ld in key sequence invalid: first element must be of type 'bytes'"
+#define YDBPY_ERR_NODE_IN_SEQUENCE_NOT_LIST_OR_TUPLE "item %ld is not a list or tuple."
+#define YDBPY_ERR_NODE_IN_SEQUENCE_VARNAME_NOT_BYTES "item %ld in node sequence invalid: first element must be of type 'bytes'"
 
 // ValueError messages
 #define YDBPY_ERR_EMPTY_FILENAME		   "YottaDB filenames must be one character or longer"
 #define YDBPY_ERR_VARNAME_TOO_LONG		   "invalid varname length %ld: max %d"
 #define YDBPY_ERR_SEQUENCE_TOO_LONG		   "invalid sequence length %ld: max %d"
 #define YDBPY_ERR_BYTES_TOO_LONG		   "invalid bytes length %ld: max %d"
-#define YDBPY_ERR_KEY_IN_SEQUENCE_INCORRECT_LENGTH "item %lu must be length 1 or 2."
-#define YDBPY_ERR_KEY_IN_SEQUENCE_VARNAME_TOO_LONG "item %ld in key sequence has invalid varname length %ld: max %d."
+#define YDBPY_ERR_NODE_IN_SEQUENCE_INCORRECT_LENGTH "item %lu must be length 1 or 2."
+#define YDBPY_ERR_NODE_IN_SEQUENCE_VARNAME_TOO_LONG "item %ld in node sequence has invalid varname length %ld: max %d."
 
-#define YDBPY_ERR_KEY_IN_SEQUENCE_SUBSARRAY_INVALID "item %ld in key sequence has invalid subsarray: %s"
+#define YDBPY_ERR_NODE_IN_SEQUENCE_SUBSARRAY_INVALID "item %ld in node sequence has invalid subsarray: %s"
 
 #define YDBPY_ERR_VARNAME_INVALID     "'varnames' argument invalid: %s"
 #define YDBPY_ERR_SUBSARRAY_INVALID   "'subsarray' argument invalid: %s"
-#define YDBPY_ERR_KEYS_INVALID	      "'keys' argument invalid: %s"
+#define YDBPY_ERR_NODES_INVALID	      "'nodes' argument invalid: %s"
 #define YDBPY_ERR_ROUTINE_UNSPECIFIED "No call-in routine specified. Routine name required for M call-in."
 
 #define YDBPY_ERR_SYSCALL "System call failed: %s, return %d (%s)"
@@ -102,14 +102,14 @@ void __assert_fail(const char *assertion, const char *file, unsigned int line, c
 	abort();
 }
 
-/* A structure that represents a key using YDB C types. used internally for
+/* A structure that represents a node using YDB C types. used internally for
  * converting between Python and YDB C types.
  */
 typedef struct {
 	ydb_buffer_t *varname;
 	int	      subs_used;
 	ydb_buffer_t *subsarray;
-} YDBKey;
+} YDBNode;
 
 #define YDB_COPY_BYTES_TO_BUFFER(BYTES, BYTES_LEN, BUFFERP, COPY_DONE) \
 	{                                                              \

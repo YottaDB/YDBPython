@@ -444,14 +444,14 @@ static bool is_valid_sequence(PyObject *object, YDBPythonSequenceType sequence_t
 		max_item_len = YDB_MAX_STR;
 		err_prefix = YDBPY_ERR_SUBSARRAY_INVALID;
 		break;
-	case YDBPython_KeySequence:
+	case YDBPython_NodeSequence:
 		max_sequence_len = YDB_MAX_SUBS;
 		max_item_len = YDB_MAX_STR;
 		/* Aggregate multiple levels of error message nesting into single prefix.
-		 * This allows for failures in Sequences of Keys to be tracked through the
+		 * This allows for failures in Sequences of Nodes to be tracked through the
 		 * multiple levels of indirection implicated in that case. Specifically, this
-		 * allows error messages to report which item in the Key Sequence is faulty, as
-		 * well as which item within the Key itself is faulty.
+		 * allows error messages to report which item in the Node Sequence is faulty, as
+		 * well as which item within the Node itself is faulty.
 		 */
 		err_prefix = extra_prefix;
 		break;
@@ -579,18 +579,18 @@ PyObject *convert_ydb_buffer_array_to_py_tuple(ydb_buffer_t *buffer_array, int l
 	return return_tuple;
 }
 
-/* This function will take an already allocated array of YDBKey structures and load it with the
+/* This function will take an already allocated array of YDBNode structures and load it with the
  * data contained in the PyObject arguments.
  *
  * Parameters:
- *    dest       - pointer to the YDBKey to fill.
+ *    dest       - pointer to the YDBNode to fill.
  *    varname    - Python bytes object representing the varname
  *    subsarray  - array of Python bytes objects representing the array of subscripts
  *                   Note: Because this function calls `convert_py_sequence_to_ydb_buffer_array`
  *                          subsarray should be validated with the
  *                          RETURN_IF_INVALID_SEQUENCE macro.
  */
-static bool load_YDBKey(YDBKey *dest, PyObject *varname, PyObject *subsarray) {
+static bool load_YDBNode(YDBNode *dest, PyObject *varname, PyObject *subsarray) {
 	bool	      done;
 	Py_ssize_t    len_ssize, sequence_len_ssize;
 	unsigned int  len;
@@ -640,99 +640,99 @@ static bool load_YDBKey(YDBKey *dest, PyObject *varname, PyObject *subsarray) {
 	return true;
 }
 
-/* Routine to free a YDBKey structure.
+/* Routine to free a YDBNode structure.
  *
  * Parameters:
- *    key    - pointer to the YDBKey to free.
+ *    node    - pointer to the YDBNode to free.
  */
-static void free_YDBKey(YDBKey *key) {
-	if (NULL != key) {
-		YDB_FREE_BUFFER((key->varname));
-		FREE_BUFFER_ARRAY(key->subsarray, key->subs_used);
+static void free_YDBNode(YDBNode *node) {
+	if (NULL != node) {
+		YDB_FREE_BUFFER((node->varname));
+		FREE_BUFFER_ARRAY(node->subsarray, node->subs_used);
 	}
 }
 
-/* Routine to validate a sequence of Python sequences representing keys. (Used
+/* Routine to validate a sequence of Python sequences representing nodes. (Used
  * only by lock().)
  * Validation rule:
- *      1) key_sequence must be a sequence
- *      2) each item in key_sequence must be a sequence
+ *      1) node_sequence must be a sequence
+ *      2) each item in node_sequence must be a sequence
  *      3) each item must be a sequence of 1 or 2 sub-items.
  *      4) item[0] must be a bytes object.
  *      5) item[1] either does not exist, is None or a sequence
  *      6) if item[1] is a sequence then it must contain only bytes objects.
  *
  * Parameters:
- *    keys_sequence        - a Python object that is to be validated.
- *    max_len              - the number of keys that are allowed in the keys_sequence
+ *    nodes_sequence        - a Python object that is to be validated.
+ *    max_len              - the number of nodes that are allowed in the nodes_sequence
  *    error_message        - a preallocated string for storing the reason for validation failure.
  */
-static int is_valid_key_sequence(PyObject *keys_sequence, int max_len) {
-	Py_ssize_t i, len_keys, len_key_seq;
-	PyObject * key, *varname, *subsarray, *seq, *key_seq;
+static int is_valid_node_sequence(PyObject *nodes_sequence, int max_len) {
+	Py_ssize_t i, len_nodes, len_node_seq;
+	PyObject * node, *varname, *subsarray, *seq, *node_seq;
 	bool	   error_encountered;
 
-	/* validate key sequence type */
-	seq = PySequence_Fast(keys_sequence, "'keys' argument must be a Sequence"); // New Reference
-	if (!(PyTuple_Check(keys_sequence) || PyList_Check(keys_sequence))) {
-		raise_ValidationError(YDBPython_TypeError, YDBPY_ERR_KEYS_INVALID, YDBPY_ERR_NOT_LIST_OR_TUPLE);
+	/* validate node sequence type */
+	seq = PySequence_Fast(nodes_sequence, "'nodes' argument must be a Sequence"); // New Reference
+	if (!(PyTuple_Check(nodes_sequence) || PyList_Check(nodes_sequence))) {
+		raise_ValidationError(YDBPython_TypeError, YDBPY_ERR_NODES_INVALID, YDBPY_ERR_NOT_LIST_OR_TUPLE);
 		DECREF_AND_RETURN(seq, FALSE);
 	}
 
-	/* validate key sequence length */
-	len_keys = PySequence_Fast_GET_SIZE(seq);
-	if (max_len < len_keys) {
-		raise_ValidationError(YDBPython_ValueError, YDBPY_ERR_KEYS_INVALID, YDBPY_ERR_SEQUENCE_TOO_LONG, len_keys, max_len);
+	/* validate node sequence length */
+	len_nodes = PySequence_Fast_GET_SIZE(seq);
+	if (max_len < len_nodes) {
+		raise_ValidationError(YDBPython_ValueError, YDBPY_ERR_NODES_INVALID, YDBPY_ERR_SEQUENCE_TOO_LONG, len_nodes, max_len);
 		DECREF_AND_RETURN(seq, FALSE);
 	}
 
-	/* validate each item/key in key sequence */
+	/* validate each item/node in node sequence */
 	error_encountered = FALSE;
-	for (i = 0; i < len_keys; i++) {
-		key = PySequence_Fast_GET_ITEM(seq, i); // Borrowed Reference
-		if (!(PyTuple_Check(key) || PyList_Check(key))) {
-			raise_ValidationError(YDBPython_TypeError, YDBPY_ERR_KEYS_INVALID, YDBPY_ERR_NOT_LIST_OR_TUPLE);
+	for (i = 0; i < len_nodes; i++) {
+		node = PySequence_Fast_GET_ITEM(seq, i); // Borrowed Reference
+		if (!(PyTuple_Check(node) || PyList_Check(node))) {
+			raise_ValidationError(YDBPython_TypeError, YDBPY_ERR_NODES_INVALID, YDBPY_ERR_NOT_LIST_OR_TUPLE);
 			DECREF_AND_RETURN(seq, FALSE);
 		}
-		key_seq = PySequence_Fast(key, ""); // New Reference
-		len_key_seq = PySequence_Fast_GET_SIZE(key_seq);
+		node_seq = PySequence_Fast(node, ""); // New Reference
+		len_node_seq = PySequence_Fast_GET_SIZE(node_seq);
 
-		if (1 <= len_key_seq) {
-			varname = PySequence_Fast_GET_ITEM(key_seq, 0); // Borrowed Reference
+		if (1 <= len_node_seq) {
+			varname = PySequence_Fast_GET_ITEM(node_seq, 0); // Borrowed Reference
 			if ((!PyUnicode_Check(varname)) && (!PyBytes_Check(varname))) {
-				raise_ValidationError(YDBPython_TypeError, YDBPY_ERR_KEYS_INVALID,
+				raise_ValidationError(YDBPython_TypeError, YDBPY_ERR_NODES_INVALID,
 						      YDBPY_ERR_VARNAME_NOT_BYTES_LIKE);
-				Py_DECREF(key_seq);
+				Py_DECREF(node_seq);
 				DECREF_AND_RETURN(seq, FALSE);
 			}
 		} else {
 			varname = Py_None;
 		}
 
-		if (2 <= len_key_seq) {
-			subsarray = PySequence_GetItem(key, 1); // Borrowed Reference
+		if (2 <= len_node_seq) {
+			subsarray = PySequence_GetItem(node, 1); // Borrowed Reference
 		} else {
 			subsarray = Py_None;
 		}
 
-		if (!key_seq || ((2 == i) && !(PyTuple_Check(key) || PyList_Check(key)))) {
-			/* Validate item/key type [list or tuple]. Only relevant for second
+		if (!node_seq || ((2 == i) && !(PyTuple_Check(node) || PyList_Check(node)))) {
+			/* Validate item/node type [list or tuple]. Only relevant for second
 			 * item, i.e. subsarray, not varname
 			 */
-			raise_ValidationError(YDBPython_TypeError, YDBPY_ERR_KEYS_INVALID,
-					      YDBPY_ERR_KEY_IN_SEQUENCE_NOT_LIST_OR_TUPLE, i);
+			raise_ValidationError(YDBPython_TypeError, YDBPY_ERR_NODES_INVALID,
+					      YDBPY_ERR_NODE_IN_SEQUENCE_NOT_LIST_OR_TUPLE, i);
 			error_encountered = TRUE;
-		} else if ((1 != len_key_seq) && (2 != len_key_seq)) {
-			/* validate item/key length [1 or 2] */
-			raise_ValidationError(YDBPython_ValueError, YDBPY_ERR_KEYS_INVALID,
-					      YDBPY_ERR_KEY_IN_SEQUENCE_INCORRECT_LENGTH, i);
+		} else if ((1 != len_node_seq) && (2 != len_node_seq)) {
+			/* validate item/node length [1 or 2] */
+			raise_ValidationError(YDBPython_ValueError, YDBPY_ERR_NODES_INVALID,
+					      YDBPY_ERR_NODE_IN_SEQUENCE_INCORRECT_LENGTH, i);
 			error_encountered = TRUE;
 		} else if ((!PyUnicode_Check(varname)) && (!PyBytes_Check(varname))) {
-			/* validate item/key first element (varname) type */
-			raise_ValidationError(YDBPython_TypeError, YDBPY_ERR_KEYS_INVALID, YDBPY_ERR_ITEM_NOT_BYTES_LIKE, i);
+			/* validate item/node first element (varname) type */
+			raise_ValidationError(YDBPython_TypeError, YDBPY_ERR_NODES_INVALID, YDBPY_ERR_ITEM_NOT_BYTES_LIKE, i);
 			error_encountered = TRUE;
-		} else if (2 == len_key_seq) {
-			/* validate item/key second element (subsarray) if it exists */
+		} else if (2 == len_node_seq) {
+			/* validate item/node second element (subsarray) if it exists */
 			if (Py_None != subsarray) {
 				int  copied;
 				char tmp_prefix[YDBPY_MAX_ERRORMSG];
@@ -743,25 +743,25 @@ static int is_valid_key_sequence(PyObject *keys_sequence, int max_len) {
 				 * for the validation failure in the given sequence. This is
 				 * needed to account for the fact that lock() accepts Sequences
 				 * within Sequences. Specifically, it accepts a Sequence of
-				 * YDBKeys, which are themselves Sequences. Accordingly, a full
-				 * error message notes which YDBKey is invalid as well as which
-				 * element of the YDBKey subsarray Sequence is invalid.
+				 * YDBNodes, which are themselves Sequences. Accordingly, a full
+				 * error message notes which YDBNode is invalid as well as which
+				 * element of the YDBNode subsarray Sequence is invalid.
 				 */
-				copied = snprintf(tmp_prefix, YDBPY_MAX_ERRORMSG, YDBPY_ERR_KEYS_INVALID,
-						  YDBPY_ERR_KEY_IN_SEQUENCE_SUBSARRAY_INVALID);
+				copied = snprintf(tmp_prefix, YDBPY_MAX_ERRORMSG, YDBPY_ERR_NODES_INVALID,
+						  YDBPY_ERR_NODE_IN_SEQUENCE_SUBSARRAY_INVALID);
 				assert(copied < YDBPY_MAX_ERRORMSG);
 				UNUSED(copied);
 				copied = snprintf(err_prefix, YDBPY_MAX_ERRORMSG, tmp_prefix, i, "%s");
 				assert(copied < YDBPY_MAX_ERRORMSG);
 				UNUSED(copied);
 
-				if (!is_valid_sequence(subsarray, YDBPython_KeySequence, err_prefix)) {
+				if (!is_valid_sequence(subsarray, YDBPython_NodeSequence, err_prefix)) {
 					error_encountered = TRUE;
 				}
 			}
 		}
 
-		Py_DECREF(key_seq);
+		Py_DECREF(node_seq);
 		if (error_encountered) {
 			DECREF_AND_RETURN(seq, FALSE);
 		}
@@ -770,39 +770,39 @@ static int is_valid_key_sequence(PyObject *keys_sequence, int max_len) {
 	return TRUE;
 }
 
-/* Takes an already validated (by 'validate_py_keys_sequence' above) PyObject sequence
- * that represents a series of keys loads that data into an already allocated array
- * of YDBKeys. (note: 'ret_keys' should later be freed by 'free_YDBKey_array' below)
+/* Takes an already validated (by 'validate_py_nodes_sequence' above) PyObject sequence
+ * that represents a series of nodes loads that data into an already allocated array
+ * of YDBNodes. (note: 'ret_nodes' should later be freed by 'free_YDBNode_array' below)
  *
  * Parameters:
- *    sequence    - a Python object that has already been validated with 'validate_py_keys_sequence' or equivalent.
+ *    sequence    - a Python object that has already been validated with 'validate_py_nodes_sequence' or equivalent.
  */
-static bool load_YDBKeys_from_key_sequence(PyObject *sequence, Py_ssize_t len_keys, YDBKey *ret_keys) {
+static bool load_YDBNodes_from_node_sequence(PyObject *sequence, Py_ssize_t len_nodes, YDBNode *ret_nodes) {
 	bool	   success = true;
 	Py_ssize_t i;
-	PyObject * key, *varname, *subsarray, *seq, *key_seq;
+	PyObject * node, *varname, *subsarray, *seq, *node_seq;
 
 	seq = PySequence_Fast(sequence, "argument must be iterable"); // New Reference
-	if ((NULL == seq) || (0 == len_keys)) {
+	if ((NULL == seq) || (0 == len_nodes)) {
 		return false;
 	}
 
-	for (i = 0; i < len_keys; i++) {
-		key = PySequence_Fast_GET_ITEM(seq, i);			     // Borrowed Reference
-		key_seq = PySequence_Fast(key, "argument must be iterable"); // New Reference
-		if (NULL == key_seq) {
+	for (i = 0; i < len_nodes; i++) {
+		node = PySequence_Fast_GET_ITEM(seq, i);			     // Borrowed Reference
+		node_seq = PySequence_Fast(node, "argument must be iterable"); // New Reference
+		if (NULL == node_seq) {
 			Py_DECREF(seq);
 			return false;
 		}
 
-		varname = PySequence_Fast_GET_ITEM(key_seq, 0); // Borrowed Reference
-		if (2 == PySequence_Fast_GET_SIZE(key_seq)) {
-			subsarray = PySequence_Fast_GET_ITEM(key_seq, 1); // Borrowed Reference
+		varname = PySequence_Fast_GET_ITEM(node_seq, 0); // Borrowed Reference
+		if (2 == PySequence_Fast_GET_SIZE(node_seq)) {
+			subsarray = PySequence_Fast_GET_ITEM(node_seq, 1); // Borrowed Reference
 		} else {
 			subsarray = Py_None;
 		}
-		success = load_YDBKey(&ret_keys[i], varname, subsarray);
-		Py_DECREF(key_seq);
+		success = load_YDBNode(&ret_nodes[i], varname, subsarray);
+		Py_DECREF(node_seq);
 		if (!success)
 			break;
 	}
@@ -810,19 +810,19 @@ static bool load_YDBKeys_from_key_sequence(PyObject *sequence, Py_ssize_t len_ke
 	return success;
 }
 
-/* Routine to free an array of YDBKeys as returned by above
- * 'load_YDBKeys_from_key_sequence'.
+/* Routine to free an array of YDBNodes as returned by above
+ * 'load_YDBNodes_from_node_sequence'.
  *
  * Parameters:
- *    keysarray    - the array that is to be freed.
- *    len          - the number of elements in keysarray.
+ *    nodesarray    - the array that is to be freed.
+ *    len          - the number of elements in nodesarray.
  */
-static void free_YDBKey_array(YDBKey *keysarray, int len) {
+static void free_YDBNode_array(YDBNode *nodesarray, int len) {
 	int i;
-	if (NULL != keysarray) {
+	if (NULL != nodesarray) {
 		for (i = 0; i < len; i++)
-			free_YDBKey(&keysarray[i]);
-		free(keysarray);
+			free_YDBNode(&nodesarray[i]);
+		free(nodesarray);
 	}
 }
 
@@ -1591,60 +1591,60 @@ static PyObject *incr(PyObject *self, PyObject *args, PyObject *kwds) {
 static PyObject *lock(PyObject *self, PyObject *args, PyObject *kwds) {
 	bool		   return_null = false;
 	bool		   success = true;
-	int		   len_keys, status;
+	int		   len_nodes, status;
 	unsigned long long timeout_nsec;
-	PyObject *	   keys_py;
-	YDBKey *	   keys_ydb;
+	PyObject *	   nodes_py;
+	YDBNode *	   nodes_ydb;
 
 	UNUSED(self);
 	/* Default values for optional arguments passed from Python */
 	timeout_nsec = 0;
-	keys_py = Py_None;
-	keys_ydb = NULL;
+	nodes_py = Py_None;
+	nodes_ydb = NULL;
 
 	/* parse and validate */
-	static char *kwlist[] = {"keys", "timeout_nsec", NULL};
+	static char *kwlist[] = {"nodes", "timeout_nsec", NULL};
 	/* Parsed values are borrowed references, do not Py_DECREF them. */
-	if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OK", kwlist, &keys_py, &timeout_nsec))
+	if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OK", kwlist, &nodes_py, &timeout_nsec))
 		return NULL;
 
-	if (Py_None == keys_py) {
-		len_keys = 0;
+	if (Py_None == nodes_py) {
+		len_nodes = 0;
 	} else {
-		if (!is_valid_key_sequence(keys_py, YDB_LOCK_MAX_KEYS)) {
+		if (!is_valid_node_sequence(nodes_py, YDB_LOCK_MAX_NODES)) {
 			return NULL;
 		}
-		len_keys = Py_SAFE_DOWNCAST(PySequence_Length(keys_py), Py_ssize_t, int);
+		len_nodes = Py_SAFE_DOWNCAST(PySequence_Length(nodes_py), Py_ssize_t, int);
 	}
 
 	/* Setup for Call */
-	if ((Py_None != keys_py) && (0 < len_keys)) {
-		keys_ydb = malloc(len_keys * sizeof(YDBKey));
-		success = load_YDBKeys_from_key_sequence(keys_py, len_keys, keys_ydb);
+	if ((Py_None != nodes_py) && (0 < len_nodes)) {
+		nodes_ydb = malloc(len_nodes * sizeof(YDBNode));
+		success = load_YDBNodes_from_node_sequence(nodes_py, len_nodes, nodes_ydb);
 		if (!success) {
-			free(keys_ydb);
+			free(nodes_ydb);
 			return NULL;
 		}
 	}
 
 	if (!return_null) {
 		gparam_list arg_values;
-		int	    cur_key, cur_index;
+		int	    cur_node, cur_index;
 
-		arg_values.n = (intptr_t)(YDB_LOCK_MIN_ARGS + (len_keys * YDB_LOCK_ARGS_PER_KEY));
+		arg_values.n = (intptr_t)(YDB_LOCK_MIN_ARGS + (len_nodes * YDB_LOCK_ARGS_PER_NODE));
 		arg_values.arg[0] = (void *)(uintptr_t)timeout_nsec;
-		arg_values.arg[1] = (void *)(uintptr_t)len_keys;
+		arg_values.arg[1] = (void *)(uintptr_t)len_nodes;
 
 		/* Initialize arg_values index to the first location after the elements
 		 * initialized above.
 		 */
 		cur_index = YDB_LOCK_MIN_ARGS;
-		if (NULL != keys_ydb) {
-			for (cur_key = 0; cur_key < len_keys; cur_key++) {
-				arg_values.arg[cur_index] = keys_ydb[cur_key].varname;
-				arg_values.arg[cur_index + 1] = (void *)(uintptr_t)keys_ydb[cur_key].subs_used;
-				arg_values.arg[cur_index + 2] = keys_ydb[cur_key].subsarray;
-				cur_index += YDB_LOCK_ARGS_PER_KEY;
+		if (NULL != nodes_ydb) {
+			for (cur_node = 0; cur_node < len_nodes; cur_node++) {
+				arg_values.arg[cur_index] = nodes_ydb[cur_node].varname;
+				arg_values.arg[cur_index + 1] = (void *)(uintptr_t)nodes_ydb[cur_node].subs_used;
+				arg_values.arg[cur_index + 2] = nodes_ydb[cur_node].subsarray;
+				cur_index += YDB_LOCK_ARGS_PER_NODE;
 			}
 		}
 
@@ -1660,7 +1660,7 @@ static PyObject *lock(PyObject *self, PyObject *args, PyObject *kwds) {
 	}
 
 	/* Free allocated memory */
-	free_YDBKey_array(keys_ydb, len_keys);
+	free_YDBNode_array(nodes_ydb, len_nodes);
 
 	if (return_null) {
 		return NULL;
@@ -2429,7 +2429,7 @@ PyMODINIT_FUNC PyInit__yottadb(void) {
 	PyDict_SetItemString(module_dictionary, "YDB_ERR_TPTIMEOUT", Py_BuildValue("i", YDB_ERR_TPTIMEOUT));
 
 	/* expose useful constants defined in _yottadb.h */
-	PyDict_SetItemString(module_dictionary, "YDB_LOCK_MAX_KEYS", Py_BuildValue("i", YDB_LOCK_MAX_KEYS));
+	PyDict_SetItemString(module_dictionary, "YDB_LOCK_MAX_NODES", Py_BuildValue("i", YDB_LOCK_MAX_NODES));
 
 	/* Adding Exceptions */
 	/* Step 1: create exception with PyErr_NewException.
