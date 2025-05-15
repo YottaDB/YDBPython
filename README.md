@@ -4,56 +4,37 @@ YDBPython provides a Pythonic API for accessing YottaDB databases.
 
 ## Requirements
 
-1. Ubuntu Server 20.04 (or similar)
-2. Python > 3.6 (f-string and type annotation used), including the `python3-dev` package that contains `Python.h`
+1. A supported Linux Distribution: Ubuntu, Red Hat, or SUSE
+2. Python > 3.6 (f-string and type annotation used), including the `python3-dev` (or `python3-devel` on RHEL/SUSE) package that contains `Python.h`
 3. libffi
 4. YottaDB 1.34 or later
 
 ## Installation
 
-1. Install Ubuntu Server 20.04
-2. Install YottaDB per the [Quick Start](https://docs.yottadb.com/MultiLangProgGuide/MultiLangProgGuide.html#quick-start) guide instructions or from [source](https://gitlab.com/YottaDB/DB/YDB)
-3. Install prerequisites:
-	* Ubuntu/Debian: `sudo apt install python3-dev python3-setuptools libffi-dev pkg-config`
-	* RHEL/CentOS: `yum install gcc python3 python3-setuptools python3-devel libffi-devel pkg-config`
-	* Arch Linux: `sudo yay -Sy python-{setuptools,pip} libffi pkg-config`
-4. Set environment variables
-	1. Set YottaDB environment variables: `source $(pkg-config --variable=prefix yottadb)/ydb_env_set`
-	2. *Optional*: If YottaDB is built with Address Sanitization (ASAN) enabled, `LD_PRELOAD` and `ASAN_OPTIONS` must be set:
-		* `export ASAN_OPTIONS="detect_leaks=0:disable_coredump=0:unmap_shadow_on_exit=1:abort_on_error=1"`
-		* `export LD_PRELOAD=$(gcc -print-file-name=libasan.so)`
-5. Install:
-	* *Option 1*: From PyPI:
-		* *Option 1*: Install in `venv`:
-			1. Enter directory where install is desired, e.g. `cd my-python-project`
-			2. Install the `python3-venv` package:
-				* Ubuntu/Debian: `sudo apt install python3-venv`
-				* RHEL/CentOS: `sudo yum install python3-virtualenv`
-				* Arch Linux: `sudo yay -Sy install python3-virtualenv`
-			3. Create venv: `python3 -m venv .venv`
-			4. Activate venv: `source .venv/bin/activate`
-			5. Install into venv: `pip install yottadb`
-		* *Option 2*: Install to user:
-			* `pip3 install yottadb --user`
-		* *Option 3*: Install globally:
-			* `sudo -E pip3 install yottadb`
-	* *Option 2*: From source:
-		1. Get the code: `git clone https://gitlab.com/YottaDB/Lang/YDBPython.git`
-		2. Enter code directory `cd YDBPython/`
-		3. Run `python -m pip install .` to install:
-			* *Option 1*: Install in `venv`:
-				1. Install the python3-venv package:
-					* Ubuntu/Debian: `sudo apt install python3-venv`
-					* RHEL/CentOS: `sudo yum install python3-virtualenv`
-					* Arch Linux: `sudo yay -Sy install python3-virtualenv`
-				2. Create `venv`: `python3 -m venv .venv`
-				3. Activate `venv`: `source .venv/bin/activate`
-				4. Install pre-requisites in `venv`: `pip install setuptools`
-				5. Install into `venv`: `python -m pip install .`
-			* *Option 2*: Install to user:
-				* `python3 -m pip install --user .`
-			* *Option 3*: Install globally (not suggested):
-				* `sudo -E python3 -m pip install .`
+Before installing YDBPython:
+1. Install YottaDB per the [Quick Start](https://docs.yottadb.com/MultiLangProgGuide/MultiLangProgGuide.html#quick-start) guide instructions or from [source](https://gitlab.com/YottaDB/DB/YDB)
+2. Install prerequisites:
+	* Ubuntu/Debian: `sudo apt install gcc python3 python3-setuptools python3-dev libffi-dev pkg-config python3-venv`
+	* RHEL/CentOS: `yum install gcc python3 python3-setuptools python3-devel libffi-devel pkg-config python3-virtualenv`
+3. Set YottaDB environment variables: `source $(pkg-config --variable=prefix yottadb)/ydb_env_set`
+
+### From PyPI
+
+1. Create venv:
+    1. Enter directory where install is desired, e.g. `cd my-python-project`
+    2. Create venv: `python3 -m venv .venv`
+    3. Activate venv: `source .venv/bin/activate`
+2. Install into venv: `pip install yottadb`
+
+### From source
+
+1. Clone YDBPython source repository: `git clone https://gitlab.com/YottaDB/Lang/YDBPython.git /PATH/TO/YDBPYTHON`
+2. Create venv:
+    1. Enter directory where install is desired, e.g. `cd my-python-project`
+    2. Create venv: `python3 -m venv .venv`
+    3. Activate venv: `source .venv/bin/activate`
+    4. Install pre-requisites in `venv`: `pip install setuptools pytest pytest-order psutil requests`
+3. Install into venv: `python -m pip install /PATH/TO/YDBPYTHON`
 
 ## Contributing and Testing
 
