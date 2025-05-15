@@ -14,12 +14,10 @@
 
 
 stages:
-  - formating-checks
+  - formatting-checks
   - test
 
-
 .ubuntu:
-  image: yottadb/yottadb-base:latest-master
   before_script:
     - apt update
     - apt install -y python3-setuptools python3-dev libffi-dev python3-pip pkg-config
@@ -28,7 +26,6 @@ stages:
     - python3 -m pip install --user .
 
 .rocky:
-  image: yottadb/yottadb-rocky-base:latest-master
   before_script:
     - yum install -y python3 gcc python3-devel libffi-devel pkg-config
     - source $(pkg-config --variable=prefix yottadb)/ydb_env_set
@@ -50,28 +47,43 @@ stages:
     # Enable Debug build be uncommenting undef_macros compiler line in setup.py
     - sed -i 's/# undef_macros/undef_macros/' setup.py
 
-test_ubuntu:
+test_ubuntu_default:
+  image: yottadb/yottadb-base:latest-master
   stage: test
   extends:
     - .ubuntu
     - .test_ubuntu
 
-test_rocky:
+test_ubuntu_asan:
+  image: yottadb/yottadb-asan-base:latest-master
   stage: test
   extends:
-    - .rocky
-    - .test_rocky
+    - .ubuntu
+  script:
+    - apt update
+    - apt install -y gcc
+    - export ASAN_OPTIONS="detect_leaks=0:disable_coredump=0:unmap_shadow_on_exit=1:abort_on_error=1"
+    - export LD_PRELOAD=$(gcc -print-file-name=libasan.so)
+    - !reference [.test_ubuntu, script]
 
 test_ubuntu_debug:
+  image: yottadb/yottadb-base:latest-master
   stage: test
   extends:
     - .ubuntu
     - .debug
     - .test_ubuntu
 
+test_rocky_default:
+  image: yottadb/yottadb-rocky-base:latest-master
+  stage: test
+  extends:
+    - .rocky
+    - .test_rocky
+
 commit-verify:
   image: ubuntu:22.04
-  stage: formating-checks
+  stage: formatting-checks
   before_script:
     - apt update -qq && apt-get install -y -qq git wget gnupg
   script:
@@ -82,7 +94,8 @@ commit-verify:
     - ./commit_verify.sh ./tools/ci/needs_copyright.sh https://gitlab.com/YottaDB/Lang/YDBPython
 
 code-format-check:
-  stage: formating-checks
+  image: yottadb/yottadb-base:latest-master
+  stage: formatting-checks
   extends:
     - .ubuntu
   artifacts:
