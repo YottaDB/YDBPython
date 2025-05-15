@@ -1432,7 +1432,7 @@ static PyObject *delete_wrapper(PyObject *self, PyObject *args, PyObject *kwds) 
 }
 
 /* Wrapper for ydb_delete_excl_s() */
-static PyObject *delete_excel(PyObject *self, PyObject *args, PyObject *kwds) {
+static PyObject *delete_except(PyObject *self, PyObject *args, PyObject *kwds) {
 	int	      namecount, status;
 	ydb_buffer_t *varnames_ydb;
 	PyObject *    varnames_py, *ret;
@@ -2335,7 +2335,7 @@ static PyMethodDef methods[] = {
      "10 : There is no value, but there is a subtree.\n"
      "11 : There are both a value and a subtree.\n"},
     {"delete", (PyCFunction)delete_wrapper, METH_VARARGS | METH_KEYWORDS, "deletes node value or tree data at node"},
-    {"delete_excel", (PyCFunction)delete_excel, METH_VARARGS | METH_KEYWORDS,
+    {"delete_except", (PyCFunction)delete_except, METH_VARARGS | METH_KEYWORDS,
      "delete the trees of all local variables "
      "except those in the 'varnames' array"},
     {"get", (PyCFunction)get, METH_VARARGS | METH_KEYWORDS, "returns the value of a node or raises exception"},

@@ -193,6 +193,25 @@ def test_delete_errors():
         yottadb.delete_tree(varname="\x80")
 
 
+def test_delete_except():
+    yottadb.set(varname="delex1", subsarray=("sub1", "sub2"), value="1")
+    yottadb.set(varname="delex2", subsarray=("sub1", "sub2"), value="2")
+    yottadb.set(varname="delex3", subsarray=("sub1", "sub2"), value="3")
+    key1 = yottadb.Key("delex4")["sub1"]["sub2"]
+    key2 = yottadb.Key("delex5")["sub1"]["sub2"]
+    key3 = yottadb.Key("delex6")["sub1"]["sub2"]
+    key1.value = "4"
+    key2.value = "5"
+    key3.value = "6"
+    yottadb.delete_except(("delex1", "delex3", key1, key3))
+    assert yottadb.get(varname="delex1", subsarray=("sub1", "sub2")) == b"1"
+    assert yottadb.get(varname="delex2", subsarray=("sub1", "sub2")) == None
+    assert yottadb.get(varname="delex3", subsarray=("sub1", "sub2")) == b"3"
+    assert key1.value == b"4"
+    assert key2.value == None
+    assert key3.value == b"6"
+
+
 def test_message():
     assert yottadb.message(yottadb.YDB_ERR_INVSTRLEN) == "%YDB-E-INVSTRLEN, Invalid string length !UL: max !UL"
     try:

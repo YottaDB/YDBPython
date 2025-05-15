@@ -1039,20 +1039,25 @@ def test_lock_being_blocked(new_db):
     assert process.exitcode == 0
 
 
-def test_delete_excel():
-    _yottadb.set(varname="testdeleteexcel1", value="1")
-    _yottadb.set(varname="testdeleteexcel2", subsarray=("sub1",), value="2")
-    _yottadb.set(varname="testdeleteexcelexception", subsarray=("sub1",), value="3")
-    _yottadb.delete_excel(varnames=("testdeleteexcelexception",))
+def test_delete_except():
+    _yottadb.set(varname="testdeleteexcept1", value="1")
+    _yottadb.set(varname="testdeleteexcept2", subsarray=("sub1",), value="2")
+    _yottadb.set(varname="testdeleteexceptexception1", subsarray=("sub1",), value="3")
+    _yottadb.set(varname="testdeleteexceptexception2", subsarray=("sub1",), value="4")
+    # Call with Tuple
+    _yottadb.delete_except(varnames=("testdeleteexceptexception1", "testdeleteexceptexception2"))
+    # Call with List
+    _yottadb.delete_except(varnames=["testdeleteexceptexception1", "testdeleteexceptexception2"])
     try:
-        _yottadb.get("testdeleteexcel1")
+        _yottadb.get("testdeleteexcept1")
     except YDBError as e:
         assert _yottadb.YDB_ERR_LVUNDEF == e.code()
     try:
-        _yottadb.get("testdeleteexcel2", ("sub1",))
+        _yottadb.get("testdeleteexcept2", ("sub1",))
     except YDBError as e:
         assert _yottadb.YDB_ERR_LVUNDEF == e.code()
-    assert _yottadb.get("testdeleteexcelexception", ("sub1",)) == b"3"
+    assert _yottadb.get("testdeleteexceptexception1", ("sub1",)) == b"3"
+    assert _yottadb.get("testdeleteexceptexception2", ("sub1",)) == b"4"
 
 
 increment_tests = [

@@ -258,6 +258,18 @@ def delete_tree(varname: AnyStr, subsarray: Tuple[AnyStr] = ()) -> None:
     _yottadb.delete(varname, subsarray, YDB_DEL_TREE)
 
 
+def delete_except(lvns: Tuple[AnyStr, Key] = ()) -> None:
+    """
+    Deletes all local variable trees, except those under the variable names in `varnames`.
+
+    :param varnames: A tuple or list of bytes-like objects or Key objects representing or
+        containing YottaDB local variable names.
+    :returns: None.
+    """
+    varnames = [lvn.varname if isinstance(lvn, Key) else lvn for lvn in lvns]
+    _yottadb.delete_except(varnames)
+
+
 def incr(varname: AnyStr, subsarray: Tuple[AnyStr] = (), increment: Union[int, float, str, bytes] = "1") -> bytes:
     """
     Increments the value of the local or global variable node specified by the `varname` and `subsarray` pair
@@ -1371,10 +1383,6 @@ class Key:
                 yield sub_next
             except YDBNodeEnd:
                 return
-
-    """
-    def delete_excel(self): ...
-    """
 
 
 # Defined after Key class to allow access to that class

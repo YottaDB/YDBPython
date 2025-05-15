@@ -157,11 +157,11 @@ def test_delete_subsarray():
     subsarray_invalid(_yottadb.delete)
 
 
-# delete_excel()
-def test_delete_excel_varnames():
+# delete_except()
+def test_delete_except_varnames():
     """
-    This function tests the validation of the delete_excel function's varnames parameter.
-    It tests that the delete_excel function:
+    This function tests the validation of the delete_except function's varnames parameter.
+    It tests that the delete_except function:
         1) Raises a TypeError if the varnames parameter is not a proper Sequence (list or tuple)
         2) Raises a TypeError if the contents of the varname list or tuple is not a str object
         3) Accepts up to _yottadb.YDB_MAX_NAMES without raising an exception
@@ -171,25 +171,25 @@ def test_delete_excel_varnames():
     """
     # Case 1: Raises a TypeError if varnames is not a list or tuple
     with pytest.raises(TypeError):
-        _yottadb.delete_excel(varnames="not a sequence")
+        _yottadb.delete_except(varnames="not a sequence")
 
     # Case 2: Raises a TypeError if the contents of the varname list or tuple is not a str object
     with pytest.raises(TypeError):
-        _yottadb.delete_excel(varnames=(1,))
+        _yottadb.delete_except(varnames=(1,))
 
     # Case 3: Accepts up to _yottadb.YDB_MAX_NAMES without raising an exception
-    _yottadb.delete_excel(varnames=["test" + str(x) for x in range(0, _yottadb.YDB_MAX_NAMES)])
+    _yottadb.delete_except(varnames=["test" + str(x) for x in range(0, _yottadb.YDB_MAX_NAMES)])
 
     # Case 4: Raise a ValueError if varnames is longer than _yottadb.YDB_MAX_NAMES
     with pytest.raises(ValueError):
-        _yottadb.delete_excel(varnames=["test" + str(x) for x in range(0, _yottadb.YDB_MAX_NAMES + 1)])
+        _yottadb.delete_except(varnames=["test" + str(x) for x in range(0, _yottadb.YDB_MAX_NAMES + 1)])
 
     # Case 5: Accept item in varnames up to _yottadb.YDB_MAX_IDENT without raising exception
-    _yottadb.delete_excel(varnames=["b" * (_yottadb.YDB_MAX_IDENT)])
+    _yottadb.delete_except(varnames=["b" * (_yottadb.YDB_MAX_IDENT)])
 
     # Case 6: Raises a ValueError if an item in the varnames list or tuple is longer than _yottadb.YDB_MAX_IDENT
     with pytest.raises(ValueError):
-        _yottadb.delete_excel(varnames=["b" * (_yottadb.YDB_MAX_IDENT + 1)])
+        _yottadb.delete_except(varnames=["b" * (_yottadb.YDB_MAX_IDENT + 1)])
 
 
 # get()
