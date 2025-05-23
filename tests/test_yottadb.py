@@ -337,6 +337,26 @@ def test_Node_callable():
     assert node2.subsarray == ["sub1", "sub2", "sub3", "sub4", "sub5"]
 
 
+def test_Node_iter(simple_data):
+    node = yottadb.Node("^test4")
+    for i, node2 in enumerate(node):
+        assert node2.leaf == bytes(f"sub{i+1}".encode("ascii"))
+        for j, node3 in enumerate(node2):
+            assert node3.leaf == bytes(f"subsub{j+1}".encode("ascii"))
+
+
+def test_Node_reversed(simple_data):
+    node = yottadb.Node("^test4")
+    i = 4
+    for node2 in reversed(node):
+        assert node2.leaf == bytes(f"sub{i-1}".encode("ascii"))
+        j = 4
+        for node3 in reversed(node2):
+            assert node3.leaf == bytes(f"subsub{j-1}".encode("ascii"))
+            j -= 1
+        i -= 1
+
+
 def test_Node_construction_errors():
     # Raise TypeError if attempt to create Node from a name that is not str or bytes
     with pytest.raises(TypeError) as terr:
@@ -364,10 +384,19 @@ def test_Node_construction_errors():
     assert re.match("YottaDB r.*", oldnode.value.decode("utf-8"))
 
 
-def test_Node__str__():
+def test_Node___str__():
     assert str(yottadb.Node("test")) == "test"
     assert str(yottadb.Node("test")["sub1"]) == 'test("sub1")'
     assert str(yottadb.Node("test")["sub1"]["sub2"]) == 'test("sub1","sub2")'
+
+
+def test_Node___repr__():
+    node = yottadb.Node("var1")
+    assert node == eval("yottadb." + repr(node))
+    node = yottadb.Node("var1", ("sub1",))
+    assert node == eval("yottadb." + repr(node))
+    node = yottadb.Node("var1", ("sub1", "sub2", "sub3"))
+    assert node == eval("yottadb." + repr(node))
 
 
 def test_Node_get_value1(simple_data):
@@ -382,6 +411,13 @@ def test_Node_get_value3(simple_data):
     assert yottadb.Node("^test3") == b"test3value1"
     assert yottadb.Node("^test3")["sub1"] == b"test3value2"
     assert yottadb.Node("^test3")["sub1"]["sub2"] == b"test3value3"
+
+
+def test_Node_subscripts(simple_data):
+    node = yottadb.Node("^test4", ("sub3",))
+    for i, subscript in enumerate(node.subscripts):
+        assert subscript == bytes(f"subsub{i+1}", encoding="utf-8")
+        assert node[subscript].value == bytes(f"test4sub3subsub{i+1}", encoding="utf-8")
 
 
 def test_Node_subsarray(simple_data):
@@ -501,19 +537,36 @@ def test_Node_copy(new_db):
 def test_Node_mutate(new_db):
     node1 = yottadb.Node("init")
     node2 = node1.mutate("changed")
+    assert node1.name == "init"
     assert node2.name == "changed"
+    node1 = node2.mutate("init")
+    assert node1.name == "init"
+    assert node2.name == "init"
+    assert node1 is node2
 
     node1 = yottadb.Node("init", ("sub1",))
     node2 = node1.mutate("sub2")
     assert node2.subsarray == ["sub2"]
+    node1 = node2.mutate("sub3")
+    assert node1.subsarray == ["sub3"]
+    assert node2.subsarray == ["sub3"]
+    assert node1 is node2
 
     node1 = yottadb.Node("init", ("sub1", "sub2"))
     node2 = node1.mutate("sub3")
     assert node2.subsarray == ["sub1", "sub3"]
+    node1 = node2.mutate("sub4")
+    assert node1.subsarray == ["sub1", "sub4"]
+    assert node2.subsarray == ["sub1", "sub4"]
+    assert node1 is node2
 
     node1 = yottadb.Node("init", ("sub1", "sub2", "sub3"))
     node2 = node1.mutate("sub4")
     assert node2.subsarray == ["sub1", "sub2", "sub4"]
+    node1 = node2.mutate("sub5")
+    assert node1.subsarray == ["sub1", "sub2", "sub5"]
+    assert node2.subsarray == ["sub1", "sub2", "sub5"]
+    assert node1 is node2
 
 
 def test_Node_subscript_next(new_db):

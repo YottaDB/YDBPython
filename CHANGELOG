@@ -6,6 +6,7 @@
 + Fixed the behavior of `Node.subscript_next()` and `Node.subscript_previous()` to return only the next or previous subscript or variable name for the given level of the calling `Node` in all cases, rather than potentially returning a different value across successive calls.
 + Removed various fields and properties from the `Node` class were added, revised, or removed, including:
 	- Revised all `Node` field names to use Python `_` convention to signify that they are private
+	- Revised `Node.__repr__` to use new callable syntax instead of bracket syntax to reduce overhead
 	- Removed `next_subsarray`, since it was only used to store state for `Key.subscript_next()` and `Key.subscript_previous()`.
 	- Moved `parent` into new `@property` method, which returns a new `Node` object representing the parent node of the caller
 	- Added `_subsarray` field replaces the function previously served by `parent`, namely, storing the subscript array for the given `Node` object

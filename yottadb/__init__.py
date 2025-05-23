@@ -846,9 +846,16 @@ class Node:
 
         :returns: A string representation of the current `Node` object for passage to `eval()`.
         """
-        result = f'{self.__class__.__name__}("{self._name}")'
-        for subscript in self._subsarray:
-            result += f'["{subscript}"]'
+        result = f'{self.__class__.__name__}("{self._name}"'
+        if len(self._subsarray) > 0:
+            result += f', ("{self._subsarray[0]}"'
+            if len(self._subsarray) == 1:
+                # Only 1 subscript, so add only a comma to make a single-element tuple
+                result += ","
+            for subscript in self._subsarray[1:]:
+                result += f', "{subscript}"'
+            result += f")"
+        result += f")"
         return result
 
     def __str__(self) -> str:
@@ -927,26 +934,20 @@ class Node:
 
     def __iter__(self) -> Generator:
         """
-        A Generator that returns the a `Node` object representing the node at the next subscript relative to the local or
-        global variable node represented by the current `Node` object on each iteration.
+        A Generator that successively yields mutable `Node` objects representing each child node of the local or
+        global variable node represented by the calling `Node` object.
 
-        :returns: A `Node` object representing the node at the next subscript relative to the local or global variable.
+        :returns: A `Node` object representing a child node of the local or global variable node represented by the calling `Node` object.
         """
-        if len(self._subsarray) > 0:
-            subscript_subsarray = list(self._subsarray)
-        else:
-            subscript_subsarray: List[AnyStr] = []
-        subscript_subsarray.append("")
-        # Duplicate calling Node to prevent mutation during successive iterations
-        next_node = Node(self._name, self._subsarray)
-        # Explicitly make the Node mutable for repeated mutations in the
-        # subscript_next loop
+        # Duplicate calling Node with next subscript level initialized to ""
+        # to prevent mutation of caller during successive iterations
+        next_node = self("")
+        # Flag the new node as mutable to signal to users of the new object
+        # that it may change on subsequent loop iterations
         next_node._mutable = True
         while True:
             try:
-                sub_next = subscript_next(self._name, subscript_subsarray)
-                subscript_subsarray[-1] = sub_next
-                next_node.mutate(sub_next)
+                next_node._subsarray[-1] = next_node.subscript_next()
                 yield next_node
             except YDBNodeEnd:
                 return
@@ -958,22 +959,16 @@ class Node:
 
         :returns: A `Node` object representing the node at the previous subscript relative to the local or global variable.
         """
-        if len(self._subsarray) > 0:
-            subscript_subsarray = list(self._subsarray)
-        else:
-            subscript_subsarray: List[AnyStr] = []
-        subscript_subsarray.append("")
-        # Duplicate calling Node to prevent mutation during successive iterations
-        next_node = Node(self._name, self._subsarray)
-        # Explicitly make the Node mutable for repeated mutations in the
-        # subscript_next loop
-        next_node._mutable = True
+        # Duplicate calling Node with next subscript level initialized to ""
+        # to prevent mutation of caller during successive iterations
+        prev_node = self("")
+        # Flag the new node as mutable to signal to users of the new object
+        # that it may change on subsequent loop iterations
+        prev_node._mutable = True
         while True:
             try:
-                sub_next = subscript_previous(self._name, subscript_subsarray)
-                subscript_subsarray[-1] = sub_next
-                next_node.mutate(sub_next)
-                yield next_node
+                prev_node._subsarray[-1] = prev_node.subscript_previous()
+                yield prev_node
             except YDBNodeEnd:
                 return
 
@@ -1008,25 +1003,33 @@ class Node:
 
     def mutate(self, name: AnyStr) -> Node:
         """
-        Create a mutable copy of the calling `Node` object with the final subscript (or variable name, if there are no subscripts) changed to value in `name`.
+        Return the `Node` object with its final subscript (or variable name, if there are no subscripts) changed to value in name.
+        If the supplied node is immutable, create a mutable copy of it before changing the final subscript.
 
         :param name: A bytes-like object representing the a YottaDB variable name or subscript.
         :returns: A new, mutable `Node` object.
         """
         if len(self._subsarray) > 0:
-            new_subs = self._subsarray[:-1]
-            new_subs.append(name)
-            mutable = Node(self._name, new_subs)
+            if self.mutable:
+                self._subsarray[-1] = name
+                mutable = self
+            else:
+                mutable = Node(self._name, self._subsarray[:-1] + [name])
         else:
-            mutable = Node(name)
-        mutable._mutable = True
+            if self.mutable:
+                self._name = name
+                mutable = self
+            else:
+                mutable = Node(name)
+        if not mutable._mutable:
+            mutable._mutable = True
         return mutable
 
     def copy(self) -> Node:
         """
-        Create a copy of the calling `Node` object.
+        Create an immutable copy of the calling `Node` object.
 
-        :returns: A new `Node` object that duplicates the caller.
+        :returns: A new, immutable `Node` object that duplicates the caller.
         """
         return Node(self._name, self._subsarray)
 
@@ -1106,12 +1109,11 @@ class Node:
         # incr() will enforce increment type
         return incr(self._name, self._subsarray, increment)
 
-    def subscript_next(self) -> Node:
+    def subscript_next(self) -> AnyStr:
         """
         Return the next subscript at the subscript level of the calling Node object. If there are no more subscripts
         at the given level, raise a `YDBNodeEnd` exception.
 
-        :param reset: A boolean value indicating whether or not to reset subscripts iteration to the original node.
         :returns: The next subscript at the given subscript level as a bytes object.
         """
         if len(self._subsarray) == 0:
@@ -1121,12 +1123,9 @@ class Node:
 
     def subscript_previous(self, reset: bool = False) -> bytes:
         """
-        Iterate over the subscripts at the given subscript level of the local or global variable node
-        represented by the current `Node` object in reverse order. When all subscripts are exhausted
-        this method will raise `YDBNodeEnd` until the iteration is reset by passing a value of `True` to
-        the `reset` parameter.
+        Return the previous subscript at the subscript level of the calling Node object. If there are no more subscripts
+        at the given level, raise a `YDBNodeEnd` exception.
 
-        :param reset: A boolean value indicating whether or not to reset subscripts iteration to the original node.
         :returns: The previous subscript at the given subscript level as a bytes object.
         """
         if len(self._subsarray) == 0:
@@ -1391,10 +1390,10 @@ class Node:
     @property
     def subscripts(self) -> Generator:
         """
-        A Generator that returns the next subscript at the current subscript level relative to the
+        A Generator that successively yields the names of all the child subscripts of the
         local or global variable node represented by the current `Node` object on each iteration.
 
-        :returns: A bytes objects representing the subscript following the current local or global variable node.
+        :returns: A bytes objects representing a child subscript of the local or global variable node represented by the calling `Node` object.
         """
         if len(self._subsarray) > 0:
             assert isinstance(self._subsarray, list)
