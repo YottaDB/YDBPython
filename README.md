@@ -46,22 +46,9 @@ The pre-commit hook requires [`black`](https://github.com/psf/black) installed; 
 
 To run YDBPython's test suite with a YDBPython source installation:
 
-1. Enter YDBPython directory containing code repository, e.g. `cd YDBPython/`
-2. Install `pytest`, `pytest-order`, and `psutil`
-	1. If `pip` for `python3` is not installed do so:
-		* Ubuntu/Debian: `sudo apt install python3-pip`
-		* RHEL/CentOS: `sudo yum install python3-pip`
-		* Arch Linux: `sudo yay -Sy install python3-pip`
-	2. Use `pip` to install `pytest`, `pytest-order`, `psutil`
-		* *Option 1*: install into `venv`
-			1. Activate `venv` if it is not already: `source .venv/bin/activate`
-			2. Install: `pip install pytest pytest-order psutil`
-		* *Option 2*: install for user: `pip3 install --user pytest pytest-order psutil`
-		* *Option 3*: install globally (not suggested): `sudo pip3 install pytest pytest-order psutil`
-3. Run the tests:
-	* *Option 1*: in `venv`: `python -m pytest`
-	* *Option 2*: with user or global installation: `python3 -m pytest`
-4. *Optional*: Cleanup between tests:
+1. Install YDBPython from source, per instructions above
+2. Run the tests in `venv`: `python -m pytest`
+3. *Optional*: Cleanup between tests:
 	* When making changes to code between test runs, some cleanup may be needed to prevent new changes being ignored due to Python caching. To clean up these files: `for artifact in $(cat .gitignore); do rm -rf $artifact; done`. Note that this will delete all files listed in `.gitignore`, including core files. If these or any other such files need to be retained, move or rename them before running the aforementioned command.
 
 # Basic Example Usage
