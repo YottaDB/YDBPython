@@ -28,7 +28,7 @@ exists() {
 
 # Ubuntu likes to name the tools after the version
 # NOTE: should be updated when later versions of LLVM are released
-for version in $(seq 12 -1 "$version"); do
+for version in $(seq 15 -1 "$version"); do
 	if exists "$tool-$version"; then
 		FOUND="$tool-$version"
 		# We found a recent enough version so return success
@@ -64,7 +64,7 @@ FOUND=$tool
 #  Host CPU: haswell
 
 if [ "$tool" = "clang-tidy" ]; then
-	majorver=$($FOUND --version | awk '/version/ {gsub(".*LLVM version", ""); print $1}' | cut -d '.' -f 1)
+	majorver=$($FOUND --version | awk '/version/ {print $3}' | cut -d '.' -f 1)
 elif [ "$tool" = "clang-format" ]; then
 	majorver=$($FOUND --version | awk '/version/ {gsub(".*clang-format version", ""); print $1}' | cut -d '.' -f 1)
 fi

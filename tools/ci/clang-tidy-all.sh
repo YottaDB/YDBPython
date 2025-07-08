@@ -2,7 +2,7 @@
 
 #################################################################
 #								#
-# Copyright (c) 2021-2023 YottaDB LLC and/or its subsidiaries.	#
+# Copyright (c) 2021-2025 YottaDB LLC and/or its subsidiaries.	#
 # All rights reserved.						#
 #								#
 #	This source code contains the intellectual property	#
@@ -30,7 +30,7 @@ rm -f temp_warnings.txt
 echo "# Run clang-tidy..."
 for file in $(find . -name '*.[ch]'); do
 	# Direct clang-tidy output to a temporary file for later processing by grep
-	$clang_tidy $file --checks="$ignored_warnings" -- -I $ydb_dist -I . -I /usr/include/python3.10 >> temp_warnings.txt 2> /dev/null || true
+	$clang_tidy $file --checks="$ignored_warnings" -- -I $ydb_dist -I . -I /usr/include/python3.12 >> temp_warnings.txt 2> /dev/null || true
 done
 
 # Extract warning and error messages from clang-tidy call. Since it is not
