@@ -17,7 +17,7 @@ YDBPython.
 YDBPython provides a Pythonic API for accessing YottaDB databases.
 """
 
-__version__ = "1.1.1"
+__version__ = "2.0.0"
 __author__ = "YottaDB LLC"
 __credits__ = "Peter Goss"
 
