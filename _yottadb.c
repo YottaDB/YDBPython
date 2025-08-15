@@ -1518,7 +1518,10 @@ static PyObject *get(PyObject *self, PyObject *args, PyObject *kwds) {
 	FREE_BUFFER_ARRAY(subsarray_ydb, subs_used);
 	YDB_FREE_BUFFER(&varname_ydb);
 	if (YDB_OK != status) {
-		raise_YDBError(status);
+		if ((YDB_ERR_GVUNDEF == status) || (YDB_ERR_LVUNDEF == status)) {
+			return Py_None;
+		} else
+			raise_YDBError(status);
 	} else {
 		/* Create Python object to return */
 		/* New Reference */
