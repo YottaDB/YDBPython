@@ -60,11 +60,20 @@ SIMPLE_DATA = (
 
 
 str2zwr_tests = [
-    (b"X\0ABC", b'"X"_$C(0)_"ABC"', b'"X"_$C(0)_"ABC"'),
+    (
+        b"X\0ABC",
+        b'"X"_$C(0)_"ABC"',
+        b'"X"_$C(0)_"ABC"',
+    ),
     (
         bytes("你好世界", encoding="utf-8"),
         b'"\xe4\xbd\xa0\xe5\xa5\xbd\xe4\xb8"_$C(150)_"\xe7"_$C(149,140)',
         b'"\xe4\xbd\xa0\xe5\xa5\xbd\xe4\xb8\x96\xe7\x95\x8c"',
+    ),
+    (
+        b"\x048}\xdc\xb4\xa2\x84\x878>\xe3tVm\xcd\xceD\xbc\x04\xe1\xd2\x1am\xc1!)/\x9a\x84\xf2",
+        b'$C(4)_"8}\xdc\xb4\xa2"_$C(132,135)_"8>\xe3tVm\xcd\xceD\xbc"_$C(4)_"\xe1\xd2"_$C(26)_"m\xc1!)/"_$C(154,132)_"\xf2"',
+        b'$C(4)_"8}\xdc\xb4"_$ZCH(162,132,135)_"8>"_$ZCH(227)_"tVm"_$ZCH(205,206)_"D"_$ZCH(188)_$C(4)_$ZCH(225,210)_$C(26)_"m"_$ZCH(193)_"!)/"_$ZCH(154,132,242)',
     ),
 ]
 

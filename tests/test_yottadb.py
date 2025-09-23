@@ -270,11 +270,11 @@ def test_Node_object(simple_data):
 
     # Node creation by setting subsarray implicitly
     node = yottadb.Node("^myglobal", ("sub1", "sub2"))
-    assert '^myglobal("sub1","sub2")' == str(node)
+    assert "^myglobal('sub1','sub2')" == str(node)
 
     # Node creation by setting subsarray explicitly
     node = yottadb.Node("^myglobal", subsarray=("sub1", "sub2"))
-    assert '^myglobal("sub1","sub2")' == str(node)
+    assert "^myglobal('sub1','sub2')" == str(node)
 
     # YDBLVUNDEFError and YDBGVUNDEFError for Node.value return None
     node = yottadb.Node("^nonexistent")  # Undefined global
@@ -386,8 +386,12 @@ def test_Node_construction_errors():
 
 def test_Node___str__():
     assert str(yottadb.Node("test")) == "test"
-    assert str(yottadb.Node("test")["sub1"]) == 'test("sub1")'
-    assert str(yottadb.Node("test")["sub1"]["sub2"]) == 'test("sub1","sub2")'
+    assert str(yottadb.Node("test")["sub1"]) == "test('sub1')"
+    assert str(yottadb.Node("test")["sub1"]["sub2"]) == "test('sub1','sub2')"
+    assert (
+        str(yottadb.Node("var1", (b"\x048}\xdc\xb4\xa2\x84\x878>\xe3tVm\xcd\xceD\xbc\x04\xe1\xd2\x1am\xc1!)/\x9a\x84\xf2",)))
+        == "var1(b'\\x048}\\xdc\\xb4\\xa2\\x84\\x878>\\xe3tVm\\xcd\\xceD\\xbc\\x04\\xe1\\xd2\\x1am\\xc1!)/\\x9a\\x84\\xf2')"
+    )
 
 
 def test_Node___repr__():
@@ -396,6 +400,8 @@ def test_Node___repr__():
     node = yottadb.Node("var1", ("sub1",))
     assert node == eval("yottadb." + repr(node))
     node = yottadb.Node("var1", ("sub1", "sub2", "sub3"))
+    assert node == eval("yottadb." + repr(node))
+    node = yottadb.Node("var1", (b"\x048}\xdc\xb4\xa2\x84\x878>\xe3tVm\xcd\xceD\xbc\x04\xe1\xd2\x1am\xc1!)/\x9a\x84\xf2",))
     assert node == eval("yottadb." + repr(node))
 
 

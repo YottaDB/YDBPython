@@ -848,12 +848,12 @@ class Node:
         """
         result = f'{self.__class__.__name__}("{self._name}"'
         if len(self._subsarray) > 0:
-            result += f', ("{self._subsarray[0]}"'
+            result += f", ({repr(self._subsarray[0])}"
             if len(self._subsarray) == 1:
                 # Only 1 subscript, so add only a comma to make a single-element tuple
                 result += ","
             for subscript in self._subsarray[1:]:
-                result += f', "{subscript}"'
+                result += f", {repr(subscript)}"
             result += f")"
         result += f")"
         return result
@@ -864,8 +864,7 @@ class Node:
 
         :returns: A human-readable string representation of the current `Node` object.
         """
-        # Convert to ZWRITE format to allow decoding of binary blobs into `str` objects
-        subscripts = ",".join([str2zwr(sub).decode("ascii") for sub in self._subsarray])
+        subscripts = ",".join([repr(sub) for sub in self._subsarray])
         if subscripts == "":
             return self._name
         else:
