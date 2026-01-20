@@ -1,6 +1,6 @@
 #################################################################
 #                                                               #
-# Copyright (c) 2021-2025 YottaDB LLC and/or its subsidiaries.  #
+# Copyright (c) 2021-2026 YottaDB LLC and/or its subsidiaries.  #
 # All rights reserved.                                          #
 #                                                               #
 #   This source code contains the intellectual property         #
@@ -18,7 +18,6 @@ import sys
 import yottadb
 from yottadb import YDB_OK
 from conftest import setup_db, teardown_db
-
 
 MAX_PROCESSES = 32
 MAX_VALUE_LEN = 256

@@ -2,7 +2,7 @@
 #
 #################################################################
 #                                                               #
-# Copyright (c) 2021-2025 YottaDB LLC and/or its subsidiaries.       #
+# Copyright (c) 2021-2026 YottaDB LLC and/or its subsidiaries.       #
 # All rights reserved.                                          #
 #                                                               #
 #       This source code contains the intellectual property     #
@@ -22,6 +22,7 @@ import os.path
 from datetime import datetime
 
 YOTTADB = re.compile(r"Copyright \(c\) (?P<start_date>20[0-9][0-9])(?P<end_date>-20[0-9][0-9])? YottaDB")
+
 
 # Goes through the file given by f one line at a time until it finds a copyright that needs to be updated.
 # f   -> file under consideration

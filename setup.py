@@ -2,7 +2,7 @@
 #                                                               #
 # Copyright (c) 2019-2021 Peter Goss All rights reserved.       #
 #                                                               #
-# Copyright (c) 2019-2025 YottaDB LLC and/or its subsidiaries.  #
+# Copyright (c) 2019-2026 YottaDB LLC and/or its subsidiaries.  #
 # All rights reserved.                                          #
 #                                                               #
 #   This source code contains the intellectual property         #
@@ -16,7 +16,6 @@ import os
 import pathlib
 import subprocess
 import re
-
 
 # Confirm $ydb_dist is set before running tests
 YDB_DIST = os.environ.get("ydb_dist")

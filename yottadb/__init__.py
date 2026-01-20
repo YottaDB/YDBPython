@@ -2,7 +2,7 @@
 #                                                               #
 # Copyright (c) 2019-2021 Peter Goss All rights reserved.       #
 #                                                               #
-# Copyright (c) 2019-2025 YottaDB LLC and/or its subsidiaries.  #
+# Copyright (c) 2019-2026 YottaDB LLC and/or its subsidiaries.  #
 # All rights reserved.                                          #
 #                                                               #
 #   This source code contains the intellectual property         #
@@ -33,7 +33,6 @@ import sys, os
 sys.setdlopenflags(sys.getdlopenflags() | os.RTLD_GLOBAL)
 import _yottadb
 from _yottadb import *
-
 
 # Create Type objects for each custom type used in this module
 # for use in type annotations

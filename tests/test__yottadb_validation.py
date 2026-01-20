@@ -2,7 +2,7 @@
 #                                                               #
 # Copyright (c) 2020-2021 Peter Goss All rights reserved.       #
 #                                                               #
-# Copyright (c) 2020-2025 YottaDB LLC and/or its subsidiaries.  #
+# Copyright (c) 2020-2026 YottaDB LLC and/or its subsidiaries.  #
 # All rights reserved.                                          #
 #                                                               #
 #   This source code contains the intellectual property         #
@@ -30,6 +30,7 @@ Note: Many functions have "varname" and "subsarray" parameters which have
 the same rules for valid input. Each of these functions are passed to
 "varname_invalid" and "subsarray_invalid" for testing.
 """
+
 import pytest
 import _yottadb
 import yottadb

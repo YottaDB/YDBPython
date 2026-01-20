@@ -1,6 +1,6 @@
 #################################################################
 #                                                               #
-# Copyright (c) 2021-2025 YottaDB LLC and/or its subsidiaries.  #
+# Copyright (c) 2021-2026 YottaDB LLC and/or its subsidiaries.  #
 # All rights reserved.                                          #
 #                                                               #
 #   This source code contains the intellectual property         #
@@ -13,7 +13,6 @@ import pytest  # type: ignore # ignore due to pytest not having type annotations
 import os
 
 import yottadb
-
 
 # Constants for loading names and other things with
 MAX_VARNAME_LEN = 8

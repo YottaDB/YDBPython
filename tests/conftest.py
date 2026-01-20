@@ -2,7 +2,7 @@
 #                                                               #
 # Copyright (c) 2019-2021 Peter Goss All rights reserved.       #
 #                                                               #
-# Copyright (c) 2019-2025 YottaDB LLC and/or its subsidiaries.  #
+# Copyright (c) 2019-2026 YottaDB LLC and/or its subsidiaries.  #
 # All rights reserved.                                          #
 #                                                               #
 #   This source code contains the intellectual property         #
@@ -25,7 +25,6 @@ import pytest  # type: ignore # ignore due to pytest not having type annotations
 from typing import Union
 
 import yottadb
-
 
 YDB_DIST = os.environ["ydb_dist"]
 TEST_DATA_DIRECTORY = "/tmp/test_yottadb/"
