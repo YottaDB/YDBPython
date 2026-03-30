@@ -102,7 +102,7 @@ create_constants_from_header_file()
 
 setup(
     name="yottadb",
-    version="2.0.0",
+    version="2.0.1",
     description="A Pythonic API for accessing YottaDB databases.",
     long_description=(pathlib.Path(__file__).parent / "README.md").read_text(encoding="utf-8"),
     long_description_content_type="text/markdown",
