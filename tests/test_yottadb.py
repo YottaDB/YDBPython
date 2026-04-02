@@ -2,7 +2,7 @@
 #                                                               #
 # Copyright (c) 2019-2021 Peter Goss All rights reserved.       #
 #                                                               #
-# Copyright (c) 2019-2025 YottaDB LLC and/or its subsidiaries.  #
+# Copyright (c) 2019-2026 YottaDB LLC and/or its subsidiaries.  #
 # All rights reserved.                                          #
 #                                                               #
 #   This source code contains the intellectual property         #
@@ -22,7 +22,6 @@ import time
 import os
 import re
 import sys
-import json
 import requests
 from urllib.request import urlretrieve
 from typing import NamedTuple, Callable, Tuple, Sequence, AnyStr
@@ -31,6 +30,22 @@ import yottadb
 from yottadb import YDBError, YDBNodeEnd
 from conftest import lock_value, str2zwr_tests, set_ci_environment, reset_ci_environment, setup_db, teardown_db, SIMPLE_DATA
 from conftest import execute
+
+
+def status_OK(status):
+    if status != 200:
+        print(f"Request failed with status: {status}")
+        return False
+    else:
+        return True
+
+
+def connection_active():
+    try:
+        response = requests.get("https://www.gitlab.com", timeout=5)
+        return status_OK(response.status_code)
+    except requests.RequestException:
+        return False
 
 
 # Confirm that YDB_ERR_ZGBLDIRACC is raised when a YDB global directory
@@ -1655,9 +1670,11 @@ def test_json_roundtrip_empty_object(new_db):
     assert {} == node.load_json()
 
 
+@pytest.mark.skipif(not connection_active(), reason="cannot reach HTTP endpoint: no internet connection.")
 def test_deserialize_JSON(new_db):
     response = requests.get("https://rxnav.nlm.nih.gov/REST/relatedndc.json?relation=product&ndc=0069-3060")
-    json_data = json.loads(response.content)
+    assert status_OK(response.status_code)
+    json_data = response.json()
     node = yottadb.Node("^rxnav")
     node.save_json(json_data)
     loaded_json = node.load_json()
@@ -1668,7 +1685,8 @@ def test_deserialize_JSON(new_db):
     assert loaded_json == json_data
 
     response = requests.get("https://gitlab.com/api/v4/projects")
-    json_data = json.loads(response.content)
+    assert status_OK(response.status_code)
+    json_data = response.json()
     node = yottadb.Node("^v4")
     node.save_json(json_data)
     loaded_json = node.load_json()
@@ -1676,9 +1694,11 @@ def test_deserialize_JSON(new_db):
     assert loaded_json == json_data
 
 
+@pytest.mark.skipif(not connection_active(), reason="cannot reach HTTP endpoint: no internet connection.")
 def test_manipulate_JSON_in_place(new_db):
     response = requests.get("https://rxnav.nlm.nih.gov/REST/relatedndc.json?relation=product&ndc=0069-3060")
-    original_json = json.loads(response.content)
+    assert status_OK(response.status_code)
+    original_json = response.json()
     node = yottadb.Node("^rxnorm")
     node.delete_tree()
     node.save_json(original_json)
